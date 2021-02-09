@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-type ConfigHelper uint8
+type configHelper uint8
 
-var Configs ConfigHelper
+var Configs configHelper
 
 var (
 	configStorage map[string]string
@@ -132,7 +132,7 @@ func startConfig() {
 	}
 }
 
-func (config *ConfigHelper) GetString(param string) string {
+func (config *configHelper) GetString(param string) string {
 	return configStorage[param]
 }
 
@@ -144,21 +144,21 @@ func getVerifyKey() *rsa.PublicKey {
 	return &jwtKey.PublicKey
 }
 
-func (config *ConfigHelper) GetUint64(param string) uint64 {
+func (config *configHelper) GetUint64(param string) uint64 {
 	n, _ := strconv.ParseUint(configStorage[param], 10, 64)
 	return n
 }
 
-func (config *ConfigHelper) GetBool(param string) bool {
+func (config *configHelper) GetBool(param string) bool {
 	b, _ := strconv.ParseBool(configStorage[param])
 	return b
 }
 
-func (config *ConfigHelper) GetInt64(param string) int64 {
+func (config *configHelper) GetInt64(param string) int64 {
 	n, _ := strconv.ParseInt(configStorage[param], 10, 64)
 	return n
 }
 
-func (config *ConfigHelper) GetFullConfig() map[string]string {
+func (config *configHelper) GetFullConfig() map[string]string {
 	return configStorage
 }

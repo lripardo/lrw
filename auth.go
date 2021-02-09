@@ -104,7 +104,7 @@ func authorizeIpFromBlacklistBruteForce(ginContext *gin.Context) (bool, error) {
 
 func validEmail(email string) bool {
 	emailLength := stringLen(email)
-	if emailLength == 0 || emailLength > MaxEmailLength {
+	if emailLength == 0 || emailLength > maxEmailLength {
 		return false
 	}
 	emailPattern := "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -151,7 +151,7 @@ var login Handler = func(ginContext *gin.Context) Response {
 	}
 	//use rune
 	passwordStringLength := stringLen(il.Password)
-	if passwordStringLength > PasswordUserMaxLength || passwordStringLength < PasswordUserMinLength {
+	if passwordStringLength > passwordUserMaxLength || passwordStringLength < passwordUserMinLength {
 		return ResponseInvalid("invalid password")(ginContext)
 	}
 	var userModel User
@@ -220,11 +220,11 @@ var register Handler = func(ginContext *gin.Context) Response {
 		return ResponseInvalid("invalid email")(ginContext)
 	}
 	passwordLength := stringLen(ru.Password)
-	if passwordLength < PasswordUserMinLength || passwordLength > PasswordUserMaxLength {
+	if passwordLength < passwordUserMinLength || passwordLength > passwordUserMaxLength {
 		return ResponseInvalid("invalid password")(ginContext)
 	}
 	nameLength := stringLen(ru.Name)
-	if nameLength == 0 || nameLength > NameUserMaxLength {
+	if nameLength == 0 || nameLength > nameUserMaxLength {
 		return ResponseInvalid("invalid name")(ginContext)
 	}
 	userExisting := &User{}

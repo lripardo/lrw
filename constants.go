@@ -1,10 +1,10 @@
 package lrw
 
 const (
-	PasswordUserMaxLength = 100
-	PasswordUserMinLength = 6
-	NameUserMaxLength     = 255
-	MaxEmailLength        = 320
+	passwordUserMaxLength = 100
+	passwordUserMinLength = 6
+	nameUserMaxLength     = 255
+	maxEmailLength        = 320
 )
 
 const (
