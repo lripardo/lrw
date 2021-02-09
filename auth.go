@@ -42,7 +42,7 @@ func getTokenStringFromCookieOrCustomHeader(ginContext *gin.Context) string {
 	return ""
 }
 
-var authenticate Handler = func(ginContext *gin.Context) Response {
+var Authenticate Handler = func(ginContext *gin.Context) Response {
 	tokenString := getTokenStringFromCookieOrCustomHeader(ginContext)
 	if tokenString == "" {
 		return ResponseNotAuthorized(ginContext)
