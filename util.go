@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-type InfoUser struct {
+type infoUser struct {
 	ID    uint64 `json:"id"`
 	Name  string `json:"name"`
 	Role  string `json:"role"`
@@ -41,6 +41,6 @@ func GetUint64ParamFromGinContext(param string, ginContext *gin.Context) (uint64
 	return id, nil
 }
 
-func StringLen(s string) int {
+func stringLen(s string) int {
 	return len([]rune(s))
 }

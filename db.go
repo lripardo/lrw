@@ -11,16 +11,16 @@ import (
 )
 
 const (
-	DatabaseDialect             = "mysql"
-	DatabaseUrl                 = "DATABASE_URL"
-	DatabaseUser                = "DATABASE_USER"
-	DatabasePassword            = "DATABASE_PASSWORD"
-	DatabaseAttemptReconnectTry = "DATABASE_ATTEMPT_RECONNECT_TRY"
-	DatabaseDelayReconnectTry   = "DATABASE_DELAY_RECONNECT_TRY"
-	DatabaseMaxConnections      = "DATABASE_MAX_CONNECTIONS"
-	DatabaseMaxIdleConnections  = "DATABASE_MAX_IDLE_CONNECTIONS"
-	DatabaseMakeMigration       = "DATABASE_MAKE_MIGRATION"
-	DatabaseDebugMode           = "DATABASE_DEBUG_MODE"
+	databaseDialect             = "mysql"
+	databaseUrl                 = "DATABASE_URL"
+	databaseUser                = "DATABASE_USER"
+	databasePassword            = "DATABASE_PASSWORD"
+	databaseAttemptReconnectTry = "DATABASE_ATTEMPT_RECONNECT_TRY"
+	databaseDelayReconnectTry   = "DATABASE_DELAY_RECONNECT_TRY"
+	databaseMaxConnections      = "DATABASE_MAX_CONNECTIONS"
+	databaseMaxIdleConnections  = "DATABASE_MAX_IDLE_CONNECTIONS"
+	databaseMakeMigration       = "DATABASE_MAKE_MIGRATION"
+	databaseDebugMode           = "DATABASE_DEBUG_MODE"
 )
 
 var DB *gorm.DB
@@ -30,46 +30,46 @@ func environmentVarNotSetMessage(environmentVariable string) string {
 }
 
 func startDatabase(params *StartServiceParameters) {
-	url := os.Getenv(DatabaseUrl)
+	url := os.Getenv(databaseUrl)
 	if len(url) == 0 {
-		log.Fatal(environmentVarNotSetMessage(DatabaseUrl))
+		log.Fatal(environmentVarNotSetMessage(databaseUrl))
 	}
-	user := os.Getenv(DatabaseUser)
+	user := os.Getenv(databaseUser)
 	if len(user) == 0 {
-		log.Fatal(environmentVarNotSetMessage(DatabaseUser))
+		log.Fatal(environmentVarNotSetMessage(databaseUser))
 	}
-	password := os.Getenv(DatabasePassword)
-	attemptReconnectTryString := os.Getenv(DatabaseAttemptReconnectTry)
+	password := os.Getenv(databasePassword)
+	attemptReconnectTryString := os.Getenv(databaseAttemptReconnectTry)
 	attemptReconnectTry, err := strconv.Atoi(attemptReconnectTryString)
 	if err != nil {
-		log.Fatal(environmentVarNotSetMessage(DatabaseAttemptReconnectTry), err)
+		log.Fatal(environmentVarNotSetMessage(databaseAttemptReconnectTry), err)
 	}
-	delayReconnectTryString := os.Getenv(DatabaseDelayReconnectTry)
+	delayReconnectTryString := os.Getenv(databaseDelayReconnectTry)
 	delayReconnectTry, err := strconv.Atoi(delayReconnectTryString)
 	if err != nil {
-		log.Fatal(environmentVarNotSetMessage(DatabaseDelayReconnectTry), err)
+		log.Fatal(environmentVarNotSetMessage(databaseDelayReconnectTry), err)
 	}
-	maxConnectionsString := os.Getenv(DatabaseMaxConnections)
+	maxConnectionsString := os.Getenv(databaseMaxConnections)
 	maxConnections, err := strconv.Atoi(maxConnectionsString)
 	if err != nil {
-		log.Fatal(environmentVarNotSetMessage(DatabaseMaxConnections), err)
+		log.Fatal(environmentVarNotSetMessage(databaseMaxConnections), err)
 	}
-	maxIdleConnectionsString := os.Getenv(DatabaseMaxIdleConnections)
+	maxIdleConnectionsString := os.Getenv(databaseMaxIdleConnections)
 	maxIdleConnections, err := strconv.Atoi(maxIdleConnectionsString)
 	if err != nil {
-		log.Fatal(environmentVarNotSetMessage(DatabaseMaxIdleConnections), err)
+		log.Fatal(environmentVarNotSetMessage(databaseMaxIdleConnections), err)
 	}
-	makeMigrationString := os.Getenv(DatabaseMakeMigration)
+	makeMigrationString := os.Getenv(databaseMakeMigration)
 	makeMigration, err := strconv.ParseBool(makeMigrationString)
 	if err != nil {
-		log.Fatal(environmentVarNotSetMessage(DatabaseMakeMigration), err)
+		log.Fatal(environmentVarNotSetMessage(databaseMakeMigration), err)
 	}
 	for i := 0; i <= attemptReconnectTry; i++ {
 		if i > 0 {
 			log.Println(fmt.Sprintf("attempt %d from %d: trying reconnect to database in %d seconds...", i, attemptReconnectTry, delayReconnectTry), err)
 			time.Sleep(time.Duration(delayReconnectTry) * time.Second)
 		}
-		DB, err = gorm.Open(DatabaseDialect, fmt.Sprintf(url, user, password))
+		DB, err = gorm.Open(databaseDialect, fmt.Sprintf(url, user, password))
 		if err == nil {
 			if i > 0 {
 				log.Println("database connection successful")
@@ -82,10 +82,10 @@ func startDatabase(params *StartServiceParameters) {
 	if DB == nil {
 		log.Fatal("database connection fail")
 	}
-	debugModeString := os.Getenv(DatabaseDebugMode)
+	debugModeString := os.Getenv(databaseDebugMode)
 	debugMode, err := strconv.ParseBool(debugModeString)
 	if err != nil {
-		log.Fatal(environmentVarNotSetMessage(DatabaseDebugMode), err)
+		log.Fatal(environmentVarNotSetMessage(databaseDebugMode), err)
 	}
 	DB.LogMode(debugMode)
 	DB.DB().SetMaxOpenConns(maxConnections)

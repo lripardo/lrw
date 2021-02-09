@@ -57,12 +57,12 @@ var Authenticate Handler = func(ginContext *gin.Context) Response {
 		if _, ok := err.(*jwt.ValidationError); ok {
 			return ResponseNotAuthorized(ginContext)
 		} else {
-			return ResponseInternalError(err, ErrorTokenInvalid)(ginContext)
+			return ResponseInternalError(err, errorTokenInvalid)(ginContext)
 		}
 	}
 	uc, ok := tokenObject.Claims.(*userClaims)
 	if !ok {
-		return ResponseInternalError(errors.New("invalid custom claims conversion"), ErrorClaimsInvalid)(ginContext)
+		return ResponseInternalError(errors.New("invalid custom claims conversion"), errorClaimsInvalid)(ginContext)
 	}
 	if len(uc.IP) == 0 || uc.ID == 0 {
 		return ResponseNotAuthorized(ginContext)
@@ -77,7 +77,7 @@ var Authenticate Handler = func(ginContext *gin.Context) Response {
 		if gorm.IsRecordNotFoundError(err) {
 			return ResponseNotAuthorized(ginContext)
 		} else {
-			return ResponseInternalError(err, ErrorAuthUserQuery)(ginContext)
+			return ResponseInternalError(err, errorAuthUserQuery)(ginContext)
 		}
 	}
 	if userModel.TokenTimestamp != nil {
@@ -103,7 +103,7 @@ func authorizeIpFromBlacklistBruteForce(ginContext *gin.Context) (bool, error) {
 }
 
 func validEmail(email string) bool {
-	emailLength := StringLen(email)
+	emailLength := stringLen(email)
 	if emailLength == 0 || emailLength > MaxEmailLength {
 		return false
 	}
@@ -119,7 +119,7 @@ func getStartAppConfigFromGinContext(ginContext *gin.Context) gin.H {
 	userContext := GetUserFromGinContext(ginContext)
 	expires := ginContext.GetInt64("expires")
 	claimIp := ginContext.GetString("claim_ip")
-	userInfo := InfoUser{ID: userContext.ID, Name: userContext.Name, Role: userContext.Role, Email: userContext.Email}
+	userInfo := infoUser{ID: userContext.ID, Name: userContext.Name, Role: userContext.Role, Email: userContext.Email}
 	jsonResponse := gin.H{
 		"user":     userInfo,
 		"expires":  time.Unix(expires, 0),
@@ -137,7 +137,7 @@ func setStartAppConfigToGinContext(ginContext *gin.Context, user User, expires i
 var login Handler = func(ginContext *gin.Context) Response {
 	authorizeIp, err := authorizeIpFromBlacklistBruteForce(ginContext)
 	if err != nil {
-		return ResponseInternalError(err, ErrorAuthorizeIpFromBlacklistLogin)(ginContext)
+		return ResponseInternalError(err, errorAuthorizeIpFromBlacklistLogin)(ginContext)
 	}
 	if !authorizeIp {
 		return ResponseCustom(429, "too many tries")(ginContext)
@@ -150,7 +150,7 @@ var login Handler = func(ginContext *gin.Context) Response {
 		return ResponseInvalid("invalid email")(ginContext)
 	}
 	//use rune
-	passwordStringLength := StringLen(il.Password)
+	passwordStringLength := stringLen(il.Password)
 	if passwordStringLength > PasswordUserMaxLength || passwordStringLength < PasswordUserMinLength {
 		return ResponseInvalid("invalid password")(ginContext)
 	}
@@ -159,7 +159,7 @@ var login Handler = func(ginContext *gin.Context) Response {
 		if gorm.IsRecordNotFoundError(err) {
 			return ResponseCustom(406, "user not found")(ginContext)
 		} else {
-			return ResponseInternalError(err, ErrorLoginUserQuery)(ginContext)
+			return ResponseInternalError(err, errorLoginUserQuery)(ginContext)
 		}
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(userModel.Password), []byte(il.Password)); err != nil {
@@ -179,7 +179,7 @@ var login Handler = func(ginContext *gin.Context) Response {
 	tokenObject := jwt.NewWithClaims(jwt.SigningMethodRS512, uc)
 	tokenString, err := tokenObject.SignedString(getSignKey())
 	if err != nil {
-		return ResponseInternalError(err, ErrorTokenSignedString)(ginContext)
+		return ResponseInternalError(err, errorTokenSignedString)(ginContext)
 	}
 	if il.Cookie {
 		ginContext.SetCookie(
@@ -219,11 +219,11 @@ var register Handler = func(ginContext *gin.Context) Response {
 	if !validEmail(ru.Email) {
 		return ResponseInvalid("invalid email")(ginContext)
 	}
-	passwordLength := StringLen(ru.Password)
+	passwordLength := stringLen(ru.Password)
 	if passwordLength < PasswordUserMinLength || passwordLength > PasswordUserMaxLength {
 		return ResponseInvalid("invalid password")(ginContext)
 	}
-	nameLength := StringLen(ru.Name)
+	nameLength := stringLen(ru.Name)
 	if nameLength == 0 || nameLength > NameUserMaxLength {
 		return ResponseInvalid("invalid name")(ginContext)
 	}
@@ -232,7 +232,7 @@ var register Handler = func(ginContext *gin.Context) Response {
 		if gorm.IsRecordNotFoundError(err) {
 			userExisting = nil
 		} else {
-			return ResponseInternalError(err, ErrorQueryExistentUser)(ginContext)
+			return ResponseInternalError(err, errorQueryExistentUser)(ginContext)
 		}
 	}
 	if userExisting != nil {
@@ -240,11 +240,11 @@ var register Handler = func(ginContext *gin.Context) Response {
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(ru.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return ResponseInternalError(err, ErrorHashUserPasswordRegister)(ginContext)
+		return ResponseInternalError(err, errorHashUserPasswordRegister)(ginContext)
 	}
 	userNewRegister := User{Email: ru.Email, Password: string(hash), Name: ru.Name, Role: RoleDefault}
 	if err := DB.Create(&userNewRegister).Error; err != nil {
-		return ResponseInternalError(err, ErrorCreateUserRegister)(ginContext)
+		return ResponseInternalError(err, errorCreateUserRegister)(ginContext)
 	}
 	return ResponseOk(ginContext)
 }

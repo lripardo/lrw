@@ -39,7 +39,7 @@ func StartService(params *StartServiceParameters) {
 	ginEngine := gin.Default()
 	ginEngine.Use(cors.New(corsConfig))
 	rootRouterGroup := ginEngine.Group(Configs.GetString("path"))
-	rootRouterGroup.GET("", authenticate.Gin(), read.Gin())
+	rootRouterGroup.GET("", Authenticate.Gin(), read.Gin())
 	authRouterGroup := rootRouterGroup.Group("auth")
 	authRouterGroup.POST("login", login.Gin())
 	authRouterGroup.POST("logout", logout.Gin())
