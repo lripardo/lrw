@@ -62,6 +62,14 @@ func ResponseNotAuthorized(ginContext *gin.Context) Response {
 	return response(401, "", nil, nil, ginContext)
 }
 
+func ResponseForbidden(ginContext *gin.Context) Response {
+	return response(403, "", nil, nil, ginContext)
+}
+
+func ResponseNotFound(ginContext *gin.Context) Response {
+	return response(404, "resource not found", nil, nil, ginContext)
+}
+
 func response(status uint, message string, data interface{}, code *uint, ginContext *gin.Context) Response {
 	if status != 200 || Configs.GetBool("logOkStatus") {
 		userInterface, exists := ginContext.Get("user")
