@@ -98,7 +98,10 @@ func response(status uint, message string, data interface{}, code *uint, ginCont
 		}
 		if status == 403 || status == 401 {
 			if Configs.GetBool("printDeniedRequestDump") {
-				log.Println(httputil.DumpRequest(ginContext.Request, true))
+				dumpRequest, err := httputil.DumpRequest(ginContext.Request, true)
+				if err == nil {
+					log.Println(string(dumpRequest))
+				}
 			}
 		}
 		logModel := Log{
