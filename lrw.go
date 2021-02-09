@@ -23,7 +23,7 @@ func DefaultStartServiceParams() *StartServiceParameters {
 		ModelsMigration: nil,
 		SetForeignKeys:  nil,
 		Routes:          nil,
-		BindAddress:     "8000",
+		BindAddress:     ":8000",
 		Network:         "tcp4",
 	}
 }
