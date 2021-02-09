@@ -102,7 +102,7 @@ func authorizeIpFromBlacklistBruteForce(ginContext *gin.Context) (bool, error) {
 	return attempts <= bruteForceCountAttemptsByIp, nil
 }
 
-func validEmail(email string) bool {
+func ValidEmail(email string) bool {
 	emailLength := stringLen(email)
 	if emailLength == 0 || emailLength > maxEmailLength {
 		return false
@@ -146,7 +146,7 @@ var login Handler = func(ginContext *gin.Context) Response {
 	if err := ginContext.ShouldBindJSON(&il); err != nil {
 		return ResponseInvalidJsonInput(ginContext)
 	}
-	if !validEmail(il.Email) {
+	if !ValidEmail(il.Email) {
 		return ResponseInvalid("invalid email")(ginContext)
 	}
 	//use rune
@@ -216,7 +216,7 @@ var register Handler = func(ginContext *gin.Context) Response {
 	if err := ginContext.ShouldBindJSON(&ru); err != nil {
 		return ResponseInvalidJsonInput(ginContext)
 	}
-	if !validEmail(ru.Email) {
+	if !ValidEmail(ru.Email) {
 		return ResponseInvalid("invalid email")(ginContext)
 	}
 	passwordLength := stringLen(ru.Password)
