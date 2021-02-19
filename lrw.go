@@ -7,14 +7,18 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strings"
+)
+
+const (
+	address = "ADDRESS"
 )
 
 type StartServiceParameters struct {
 	ModelsMigration []interface{}
 	SetForeignKeys  func(*gorm.DB)
 	Routes          func(*gin.RouterGroup)
-	BindAddress     string
 	Network         string
 }
 
@@ -23,12 +27,15 @@ func DefaultStartServiceParams() *StartServiceParameters {
 		ModelsMigration: nil,
 		SetForeignKeys:  nil,
 		Routes:          nil,
-		BindAddress:     ":8000",
 		Network:         "tcp4",
 	}
 }
 
 func StartService(params *StartServiceParameters) {
+	a := os.Getenv(address)
+	if len(a) == 0 {
+		log.Fatal(environmentVarNotSetMessage(address))
+	}
 	startDatabase(params)
 	startConfig()
 	corsConfig := cors.DefaultConfig()
@@ -49,7 +56,7 @@ func StartService(params *StartServiceParameters) {
 		params.Routes(rootRouterGroup)
 	}
 	server := &http.Server{Handler: ginEngine}
-	networkListener, err := net.Listen(params.Network, params.BindAddress)
+	networkListener, err := net.Listen(params.Network, a)
 	if err != nil {
 		log.Fatal(err)
 	}
