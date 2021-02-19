@@ -54,7 +54,7 @@ func validatePath(path string) bool {
 	return false
 }
 
-func validateTokenTime(tokenTime string) bool {
+func validateNotZeroInt64(tokenTime string) bool {
 	time, err := strconv.ParseInt(tokenTime, 10, 64)
 	return err == nil && time > 0
 }
@@ -82,7 +82,7 @@ func startConfig() {
 		{Key: "customAuthenticationHeader", Value: "Authorization", Validator: validateStringNotEmpty},
 		{Key: "path", Value: "/api/v1", Validator: validatePath},
 		{Key: "domain", Value: "localhost", Validator: validateStringNotEmpty},
-		{Key: "tokenTime", Value: "31540000000", Validator: validateTokenTime},
+		{Key: "tokenTime", Value: "31540000000", Validator: validateNotZeroInt64},
 		{Key: "tokenAudience", Value: "RP_WEB_LIB", Validator: validateStringNotEmpty},
 		{Key: "tokenIssuer", Value: "RP_WEB_LIB", Validator: validateStringNotEmpty},
 		{Key: "verifyTokenIp", Value: "true", Validator: validateBoolean},
@@ -90,6 +90,7 @@ func startConfig() {
 		{Key: "bruteForceTimeMinutesAttemptsByIp", Value: "5", Validator: validateNotZeroUint64},
 		{Key: "logOkStatus", Value: "false", Validator: validateBoolean},
 		{Key: "printDeniedRequestDump", Value: "true", Validator: validateBoolean},
+		{Key: "allowEmptyOrigin", Value: "false", Validator: validateBoolean},
 		{Key: jwtAlias, Value: "", Validator: nil},
 	}
 	for _, c := range configMapper {

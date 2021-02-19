@@ -19,6 +19,13 @@ func (h Handler) Gin() func(*gin.Context) {
 	}
 }
 
+var globalFilter Handler = func(ginContext *gin.Context) Response {
+	if ginContext.GetHeader("Origin") == "" && !Configs.GetBool("allowEmptyOrigin") {
+		return ResponseNotAuthorized(ginContext)
+	}
+	return Next
+}
+
 var read Handler = func(ginContext *gin.Context) Response {
 	jsonResponse := getStartAppConfigFromGinContext(ginContext)
 	return ResponseOkWithData(jsonResponse)(ginContext)
@@ -107,12 +114,12 @@ func response(status uint, message string, data interface{}, code *uint, ginCont
 		logModel := Log{
 			Status:        status,
 			Path:          ginContext.Request.RequestURI,
-			Ip:            ginContext.ClientIP(),
+			IP:            ginContext.ClientIP(),
 			ContentLength: ginContext.Request.ContentLength,
 			Origin:        origin,
 			ErrorCode:     code,
 			Method:        ginContext.Request.Method,
-			ClaimIp:       claimIp,
+			ClaimIP:       claimIp,
 			User:          userId,
 		}
 		if err := DB.Create(&logModel).Error; err != nil {
