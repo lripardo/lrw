@@ -42,7 +42,7 @@ func getTokenStringFromCookieOrCustomHeader(ginContext *gin.Context) string {
 	return ""
 }
 
-func Roles(roles ...string) func(ginContext *gin.Context) Response {
+func Roles(roles ...string) Handler {
 	return func(ginContext *gin.Context) Response {
 		userContext := GetUserFromGinContext(ginContext)
 		for _, role := range roles {
