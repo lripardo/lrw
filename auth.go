@@ -42,6 +42,18 @@ func getTokenStringFromCookieOrCustomHeader(ginContext *gin.Context) string {
 	return ""
 }
 
+func Roles(roles ...string) func(ginContext *gin.Context) Response {
+	return func(ginContext *gin.Context) Response {
+		userContext := GetUserFromGinContext(ginContext)
+		for _, role := range roles {
+			if userContext.Role == role {
+				return Next
+			}
+		}
+		return ResponseForbidden(ginContext)
+	}
+}
+
 var Authenticate Handler = func(ginContext *gin.Context) Response {
 	tokenString := getTokenStringFromCookieOrCustomHeader(ginContext)
 	if tokenString == "" {
