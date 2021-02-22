@@ -1,6 +1,7 @@
 package lrw
 
 import (
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -13,6 +14,10 @@ import (
 
 const (
 	address = "ADDRESS"
+)
+
+var (
+	VERSION = "Development"
 )
 
 type StartServiceParameters struct {
@@ -32,6 +37,7 @@ func DefaultStartServiceParams() *StartServiceParameters {
 }
 
 func StartService(params *StartServiceParameters) {
+	log.Println(fmt.Sprintf("Started with version: %s", VERSION))
 	a := os.Getenv(address)
 	if len(a) == 0 {
 		log.Fatal(environmentVarNotSetMessage(address))
