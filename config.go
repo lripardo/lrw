@@ -72,7 +72,7 @@ func ValidateBoolean(booleanValue string) bool {
 	return booleanValue == "true" || booleanValue == "false"
 }
 
-func startConfig(extraConfigs []MapConfig) {
+func startConfig(params *StartServiceParameters) {
 	jwtAlias := "jwtKey"
 	configMapper := []MapConfig{
 		{Key: "cookie", Value: "session", Validator: ValidateStringNotEmpty},
@@ -93,8 +93,8 @@ func startConfig(extraConfigs []MapConfig) {
 		{Key: "allowEmptyOrigin", Value: "false", Validator: ValidateBoolean},
 		{Key: jwtAlias, Value: "", Validator: nil},
 	}
-	if extraConfigs != nil {
-		configMapper = append(configMapper, extraConfigs...)
+	if params.ExtraConfigs != nil {
+		configMapper = append(configMapper, params.ExtraConfigs...)
 	}
 	for _, c := range configMapper {
 		configDb := Config{}
@@ -133,6 +133,9 @@ func startConfig(extraConfigs []MapConfig) {
 	jwtKey, err = x509.ParsePKCS1PrivateKey(keyBytes)
 	if err != nil {
 		log.Fatal("cannot parse RSA JWT key", err)
+	}
+	if params.StartConfig != nil {
+		params.StartConfig()
 	}
 }
 
