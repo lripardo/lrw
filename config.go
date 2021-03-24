@@ -22,17 +22,17 @@ var (
 	jwtKey        *rsa.PrivateKey
 )
 
-type mapConfig struct {
+type MapConfig struct {
 	Key       string
 	Value     string
 	Validator func(string) bool
 }
 
-func validateGinMode(ginMode string) bool {
+func ValidateGinMode(ginMode string) bool {
 	return ginMode == gin.DebugMode || ginMode == gin.ReleaseMode || ginMode == gin.TestMode
 }
 
-func validateCommaArrayString(commaArrayString string) bool {
+func ValidateCommaArrayString(commaArrayString string) bool {
 	if len(commaArrayString) > 0 {
 		headers := strings.Split(commaArrayString, ",")
 		for _, h := range headers {
@@ -45,7 +45,7 @@ func validateCommaArrayString(commaArrayString string) bool {
 	return false
 }
 
-func validatePath(path string) bool {
+func ValidatePath(path string) bool {
 	if len(path) > 1 {
 		if path[0] == '/' {
 			return len(path[1:]) > 0
@@ -54,44 +54,47 @@ func validatePath(path string) bool {
 	return false
 }
 
-func validateNotZeroInt64(tokenTime string) bool {
+func ValidateNotZeroInt64(tokenTime string) bool {
 	time, err := strconv.ParseInt(tokenTime, 10, 64)
 	return err == nil && time > 0
 }
 
-func validateStringNotEmpty(str string) bool {
+func ValidateStringNotEmpty(str string) bool {
 	return len(str) != 0
 }
 
-func validateNotZeroUint64(uint64Value string) bool {
+func ValidateNotZeroUint64(uint64Value string) bool {
 	parsedNumber, err := strconv.ParseUint(uint64Value, 10, 64)
 	return err == nil && parsedNumber > 0
 }
 
-func validateBoolean(booleanValue string) bool {
+func ValidateBoolean(booleanValue string) bool {
 	return booleanValue == "true" || booleanValue == "false"
 }
 
-func startConfig() {
+func startConfig(extraConfigs []MapConfig) {
 	jwtAlias := "jwtKey"
-	configMapper := []mapConfig{
-		{Key: "cookie", Value: "session", Validator: validateStringNotEmpty},
-		{Key: "ginMode", Value: "debug", Validator: validateGinMode},
-		{Key: "allowHeaders", Value: "Origin,X-Request-Width,Content-Type,Accept", Validator: validateCommaArrayString},
-		{Key: "allowOrigins", Value: "http://localhost:8080", Validator: validateCommaArrayString},
-		{Key: "customAuthenticationHeader", Value: "Authorization", Validator: validateStringNotEmpty},
-		{Key: "path", Value: "/api/v1", Validator: validatePath},
-		{Key: "domain", Value: "localhost", Validator: validateStringNotEmpty},
-		{Key: "tokenTime", Value: "31540000000", Validator: validateNotZeroInt64},
-		{Key: "tokenAudience", Value: "RP_WEB_LIB", Validator: validateStringNotEmpty},
-		{Key: "tokenIssuer", Value: "RP_WEB_LIB", Validator: validateStringNotEmpty},
-		{Key: "verifyTokenIp", Value: "true", Validator: validateBoolean},
-		{Key: "bruteForceCountAttemptsByIp", Value: "3", Validator: validateNotZeroUint64},
-		{Key: "bruteForceTimeMinutesAttemptsByIp", Value: "5", Validator: validateNotZeroUint64},
-		{Key: "logOkStatus", Value: "false", Validator: validateBoolean},
-		{Key: "printDeniedRequestDump", Value: "true", Validator: validateBoolean},
-		{Key: "allowEmptyOrigin", Value: "false", Validator: validateBoolean},
+	configMapper := []MapConfig{
+		{Key: "cookie", Value: "session", Validator: ValidateStringNotEmpty},
+		{Key: "ginMode", Value: "debug", Validator: ValidateGinMode},
+		{Key: "allowHeaders", Value: "Origin,X-Request-Width,Content-Type,Accept", Validator: ValidateCommaArrayString},
+		{Key: "allowOrigins", Value: "http://localhost:8080", Validator: ValidateCommaArrayString},
+		{Key: "customAuthenticationHeader", Value: "Authorization", Validator: ValidateStringNotEmpty},
+		{Key: "path", Value: "/api/v1", Validator: ValidatePath},
+		{Key: "domain", Value: "localhost", Validator: ValidateStringNotEmpty},
+		{Key: "tokenTime", Value: "31540000000", Validator: ValidateNotZeroInt64},
+		{Key: "tokenAudience", Value: "RP_WEB_LIB", Validator: ValidateStringNotEmpty},
+		{Key: "tokenIssuer", Value: "RP_WEB_LIB", Validator: ValidateStringNotEmpty},
+		{Key: "verifyTokenIp", Value: "true", Validator: ValidateBoolean},
+		{Key: "bruteForceCountAttemptsByIp", Value: "3", Validator: ValidateNotZeroUint64},
+		{Key: "bruteForceTimeMinutesAttemptsByIp", Value: "5", Validator: ValidateNotZeroUint64},
+		{Key: "logOkStatus", Value: "false", Validator: ValidateBoolean},
+		{Key: "printDeniedRequestDump", Value: "true", Validator: ValidateBoolean},
+		{Key: "allowEmptyOrigin", Value: "false", Validator: ValidateBoolean},
 		{Key: jwtAlias, Value: "", Validator: nil},
+	}
+	if extraConfigs != nil {
+		configMapper = append(configMapper, extraConfigs...)
 	}
 	for _, c := range configMapper {
 		configDb := Config{}

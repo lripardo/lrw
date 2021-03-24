@@ -21,6 +21,7 @@ var (
 )
 
 type StartServiceParameters struct {
+	ExtraConfigs    []MapConfig
 	ModelsMigration []interface{}
 	SetForeignKeys  func(*gorm.DB)
 	Routes          func(*gin.RouterGroup)
@@ -29,6 +30,7 @@ type StartServiceParameters struct {
 
 func DefaultStartServiceParams() *StartServiceParameters {
 	return &StartServiceParameters{
+		ExtraConfigs:    nil,
 		ModelsMigration: nil,
 		SetForeignKeys:  nil,
 		Routes:          nil,
@@ -43,7 +45,7 @@ func StartService(params *StartServiceParameters) {
 		log.Fatal(environmentVarNotSetMessage(address))
 	}
 	startDatabase(params)
-	startConfig()
+	startConfig(params.ExtraConfigs)
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowCredentials = true
 	corsConfig.AllowHeaders = strings.Split(Configs.GetString("allowHeaders"), ",")
