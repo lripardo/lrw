@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type userClaims struct {
+type UserClaims struct {
 	ID uint64 `json:"id"`
 	IP string `json:"ip"`
 	jwt.StandardClaims
@@ -54,50 +54,58 @@ func Roles(roles ...string) Handler {
 	}
 }
 
-var Authenticate Handler = func(ginContext *gin.Context) Response {
+func GetUserFromRequest(ginContext *gin.Context) (*User, *UserClaims, Handler) {
 	tokenString := getTokenStringFromCookieOrCustomHeader(ginContext)
 	if tokenString == "" {
-		return ResponseNotAuthorized(ginContext)
+		return nil, nil, ResponseNotAuthorized
 	}
-	tokenObject, err := jwt.ParseWithClaims(tokenString, &userClaims{}, func(*jwt.Token) (interface{}, error) {
+	tokenObject, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(*jwt.Token) (interface{}, error) {
 		return getVerifyKey(), nil
 	})
 	if err != nil || tokenObject == nil {
-		return ResponseNotAuthorized(ginContext)
+		return nil, nil, ResponseNotAuthorized
 	}
 	if !tokenObject.Valid {
 		if _, ok := err.(*jwt.ValidationError); ok {
-			return ResponseNotAuthorized(ginContext)
+			return nil, nil, ResponseNotAuthorized
 		} else {
-			return ResponseInternalError(err, errorTokenInvalid)(ginContext)
+			return nil, nil, ResponseInternalError(err, errorTokenInvalid)
 		}
 	}
-	uc, ok := tokenObject.Claims.(*userClaims)
+	uc, ok := tokenObject.Claims.(*UserClaims)
 	if !ok {
-		return ResponseInternalError(errors.New("invalid custom claims conversion"), errorClaimsInvalid)(ginContext)
+		return nil, nil, ResponseInternalError(errors.New("invalid custom claims conversion"), errorClaimsInvalid)
 	}
 	if len(uc.IP) == 0 || uc.ID == 0 {
-		return ResponseNotAuthorized(ginContext)
+		return nil, nil, ResponseNotAuthorized
 	}
 	if Configs.GetBool("verifyTokenIp") {
 		if uc.IP != ginContext.ClientIP() {
-			return ResponseNotAuthorized(ginContext)
+			return nil, nil, ResponseNotAuthorized
 		}
 	}
 	var userModel User
 	if err := DB.First(&userModel, uc.ID).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return ResponseNotAuthorized(ginContext)
+			return nil, nil, ResponseNotAuthorized
 		} else {
-			return ResponseInternalError(err, errorAuthUserQuery)(ginContext)
+			return nil, nil, ResponseInternalError(err, errorAuthUserQuery)
 		}
 	}
 	if userModel.TokenTimestamp != nil {
 		if time.Unix(uc.IssuedAt, 0).Before(*userModel.TokenTimestamp) {
-			return ResponseNotAuthorized(ginContext)
+			return nil, nil, ResponseNotAuthorized
 		}
 	}
-	setStartAppConfigToGinContext(ginContext, userModel, uc.ExpiresAt, uc.IP)
+	return &userModel, nil, nil
+}
+
+var Authenticate Handler = func(ginContext *gin.Context) Response {
+	userModel, uc, handler := GetUserFromRequest(ginContext)
+	if handler != nil {
+		return handler(ginContext)
+	}
+	setStartAppConfigToGinContext(ginContext, *userModel, uc.ExpiresAt, uc.IP)
 	return Next
 }
 
@@ -178,7 +186,7 @@ var login Handler = func(ginContext *gin.Context) Response {
 		return ResponseNotAuthorized(ginContext)
 	}
 	tokenTime := Configs.GetInt64("tokenTime")
-	uc := userClaims{
+	uc := UserClaims{
 		userModel.ID,
 		ginContext.ClientIP(),
 		jwt.StandardClaims{
