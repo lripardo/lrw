@@ -97,7 +97,7 @@ func GetUserFromRequest(ginContext *gin.Context) (*User, *UserClaims, Handler) {
 			return nil, nil, ResponseNotAuthorized
 		}
 	}
-	return &userModel, nil, nil
+	return &userModel, uc, nil
 }
 
 var Authenticate Handler = func(ginContext *gin.Context) Response {
