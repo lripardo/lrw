@@ -6,7 +6,7 @@ const (
 	nameUserMaxLength      = 255
 	maxEmailLength         = 320
 	maxAttemptReconnectTry = 100
-	minAttemptReconnectTry = 1
+	minAttemptReconnectTry = 0
 	minDelayReconnectTry   = 1
 	maxDelayReconnectTry   = 3600
 	minMaxConnections      = 1

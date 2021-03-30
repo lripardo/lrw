@@ -1,8 +1,6 @@
 package lrw
 
 import (
-	"fmt"
-	"github.com/jinzhu/gorm"
 	"time"
 )
 
@@ -39,17 +37,6 @@ type Log struct {
 	User          *uint64 `gorm:"type:bigint unsigned"`
 	ErrorCode     *uint   `gorm:"type:int unsigned"`
 	ClaimIP       *string `gorm:"type:varchar(45)"`
-}
-
-func setForeignKeys(gormDb *gorm.DB) {
-	gormDb.Model(&Log{}).AddForeignKey("user", fmt.Sprintf("%s(id)", User{}.TableName()), "RESTRICT", "RESTRICT")
-}
-
-func getModelsMigrations() []interface{} {
-	return []interface{}{
-		&User{},
-		&Log{},
-	}
 }
 
 func (User) TableName() string {

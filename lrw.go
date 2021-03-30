@@ -21,24 +21,24 @@ var (
 )
 
 type StartServiceParameters struct {
-	StartDefaultModels bool
-	StartConfig        func()
-	ExtraConfigs       []MapConfig
-	ModelsMigration    []interface{}
-	SetForeignKeys     func(*gorm.DB)
-	Routes             func(*gin.RouterGroup)
-	Network            string
+	AuthFramework   bool
+	StartConfig     func()
+	ExtraConfigs    []MapConfig
+	ModelsMigration []interface{}
+	SetForeignKeys  func(*gorm.DB)
+	Routes          func(*gin.RouterGroup)
+	Network         string
 }
 
 func DefaultStartServiceParams() *StartServiceParameters {
 	return &StartServiceParameters{
-		StartDefaultModels: true,
-		StartConfig:        nil,
-		ExtraConfigs:       nil,
-		ModelsMigration:    nil,
-		SetForeignKeys:     nil,
-		Routes:             nil,
-		Network:            "tcp4",
+		AuthFramework:   true,
+		StartConfig:     nil,
+		ExtraConfigs:    nil,
+		ModelsMigration: nil,
+		SetForeignKeys:  nil,
+		Routes:          nil,
+		Network:         "tcp4",
 	}
 }
 
@@ -59,7 +59,7 @@ func StartService(params *StartServiceParameters) {
 	ginEngine.Use(cors.New(corsConfig))
 	rootRouterGroup := ginEngine.Group(Configs.GetString("path"))
 	rootRouterGroup.Use(globalFilter.Gin())
-	if params.StartDefaultModels {
+	if params.AuthFramework {
 		rootRouterGroup.GET("", Authenticate.Gin(), read.Gin())
 		authRouterGroup := rootRouterGroup.Group("auth")
 		authRouterGroup.POST("login", login.Gin())

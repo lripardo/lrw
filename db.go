@@ -87,7 +87,12 @@ func startDatabase(params *StartServiceParameters) {
 	}
 	for i := 0; i <= attemptReconnectTry; i++ {
 		if i > 0 {
-			log.Println(fmt.Sprintf("attempt %d from %d: trying reconnect to database in %d seconds...", i, attemptReconnectTry, delayReconnectTry), err)
+			if attemptReconnectTry == 0 {
+				log.Println(fmt.Sprintf("trying reconnect to database in %d seconds...", delayReconnectTry), err)
+				i = 1
+			} else {
+				log.Println(fmt.Sprintf("attempt %d from %d: trying reconnect to database in %d seconds...", i, attemptReconnectTry, delayReconnectTry), err)
+			}
 			time.Sleep(time.Duration(delayReconnectTry) * time.Second)
 		}
 		DB, err = gorm.Open(databaseDialect, fmt.Sprintf(url, user, password, name))
@@ -112,10 +117,10 @@ func startDatabase(params *StartServiceParameters) {
 	DB.DB().SetMaxOpenConns(maxConnections)
 	DB.DB().SetMaxIdleConns(maxIdleConnections)
 	if makeMigration {
-		DB.AutoMigrate(&Config{})
-		if params.StartDefaultModels {
-			DB.AutoMigrate(getModelsMigrations()...)
-			setForeignKeys(DB)
+		DB.AutoMigrate(&Config{}, &Log{})
+		if params.AuthFramework {
+			DB.AutoMigrate(&User{})
+			DB.Model(&Log{}).AddForeignKey("user", fmt.Sprintf("%s(id)", User{}.TableName()), "RESTRICT", "RESTRICT")
 		}
 		if params.ModelsMigration != nil {
 			DB.AutoMigrate(params.ModelsMigration...)
