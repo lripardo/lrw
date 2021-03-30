@@ -46,10 +46,8 @@ func ValidateCommaArrayString(commaArrayString string) bool {
 }
 
 func ValidatePath(path string) bool {
-	if len(path) > 1 {
-		if path[0] == '/' {
-			return len(path[1:]) > 0
-		}
+	if len(path) > 0 {
+		return path[0] == '/'
 	}
 	return false
 }
