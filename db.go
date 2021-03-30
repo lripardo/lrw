@@ -112,6 +112,7 @@ func startDatabase(params *StartServiceParameters) {
 	DB.DB().SetMaxOpenConns(maxConnections)
 	DB.DB().SetMaxIdleConns(maxIdleConnections)
 	if makeMigration {
+		DB.AutoMigrate(&Config{})
 		if params.StartDefaultModels {
 			DB.AutoMigrate(getModelsMigrations()...)
 			setForeignKeys(DB)

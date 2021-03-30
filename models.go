@@ -49,7 +49,6 @@ func getModelsMigrations() []interface{} {
 	return []interface{}{
 		&User{},
 		&Log{},
-		&Config{},
 	}
 }
 
