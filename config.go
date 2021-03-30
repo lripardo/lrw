@@ -131,13 +131,15 @@ func startConfig(params *StartServiceParameters) {
 		}
 		configStorage[c.Key] = configDb.Data
 	}
-	keyBytes, err := base64.StdEncoding.DecodeString(configStorage[jwtAlias])
-	if err != nil {
-		log.Fatal("cannot decode key from base64")
-	}
-	jwtKey, err = x509.ParsePKCS1PrivateKey(keyBytes)
-	if err != nil {
-		log.Fatal("cannot parse RSA JWT key", err)
+	if params.AuthFramework {
+		keyBytes, err := base64.StdEncoding.DecodeString(configStorage[jwtAlias])
+		if err != nil {
+			log.Fatal("cannot decode key from base64")
+		}
+		jwtKey, err = x509.ParsePKCS1PrivateKey(keyBytes)
+		if err != nil {
+			log.Fatal("cannot parse RSA JWT key", err)
+		}
 	}
 	if params.StartConfig != nil {
 		params.StartConfig()
