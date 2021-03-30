@@ -85,9 +85,13 @@ func startDatabase(params *StartServiceParameters) {
 	if err != nil {
 		log.Fatal(environmentVarNotSetMessage(databaseMakeMigration), err)
 	}
+	loop := attemptReconnectTry == 0
+	if loop {
+		attemptReconnectTry = 2
+	}
 	for i := 0; i <= attemptReconnectTry; i++ {
 		if i > 0 {
-			if attemptReconnectTry == 0 {
+			if loop {
 				log.Println(fmt.Sprintf("trying reconnect to database in %d seconds...", delayReconnectTry), err)
 				i = 1
 			} else {
