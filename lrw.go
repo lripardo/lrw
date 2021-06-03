@@ -45,6 +45,9 @@ func DefaultStartServiceParams() *StartServiceParameters {
 }
 
 func StartService(params *StartServiceParameters) {
+	if params == nil {
+		log.Fatal("start params nil")
+	}
 	log.Println(fmt.Sprintf("Started with version: %s", VERSION))
 	a := os.Getenv(address)
 	if len(a) == 0 {
@@ -62,9 +65,9 @@ func StartService(params *StartServiceParameters) {
 	rootRouterGroup := ginEngine.Group(Configs.GetString("path"))
 	rootRouterGroup.Use(globalFilter.Gin())
 	if params.AuthFramework {
-		rootRouterGroup.GET("", Authenticate.Gin(), read(params.AuthReadResponse).Gin())
+		rootRouterGroup.GET("", Authenticate.Gin(), read(params).Gin())
 		authRouterGroup := rootRouterGroup.Group("auth")
-		authRouterGroup.POST("login", login.Gin())
+		authRouterGroup.POST("login", login(params).Gin())
 		authRouterGroup.POST("logout", logout.Gin())
 		authRouterGroup.POST("register", register.Gin())
 	}

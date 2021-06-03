@@ -26,11 +26,11 @@ var globalFilter Handler = func(ginContext *gin.Context) Response {
 	return Next
 }
 
-func read(f func(gin.H) gin.H) Handler {
+func read(params *StartServiceParameters) Handler {
 	return func(ginContext *gin.Context) Response {
 		jsonResponse := getStartAppConfigFromGinContext(ginContext)
-		if f != nil {
-			jsonResponse = f(jsonResponse)
+		if params.AuthReadResponse != nil {
+			jsonResponse = params.AuthReadResponse(jsonResponse)
 		}
 		return ResponseOkWithData(jsonResponse)(ginContext)
 	}

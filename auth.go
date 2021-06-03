@@ -154,69 +154,74 @@ func setStartAppConfigToGinContext(ginContext *gin.Context, user User, expires i
 	ginContext.Set("claim_ip", claimIp)
 }
 
-var login Handler = func(ginContext *gin.Context) Response {
-	authorizeIp, err := authorizeIpFromBlacklistBruteForce(ginContext)
-	if err != nil {
-		return ResponseInternalError(err, errorAuthorizeIpFromBlacklistLogin)(ginContext)
-	}
-	if !authorizeIp {
-		return ResponseCustom(429, "too many tries")(ginContext)
-	}
-	var il inputLogin
-	if err := ginContext.ShouldBindJSON(&il); err != nil {
-		return ResponseInvalidJsonInput(ginContext)
-	}
-	if !ValidEmail(il.Email) {
-		return ResponseInvalid("invalid email")(ginContext)
-	}
-	//use rune
-	passwordStringLength := stringLen(il.Password)
-	if passwordStringLength > passwordUserMaxLength || passwordStringLength < passwordUserMinLength {
-		return ResponseInvalid("invalid password")(ginContext)
-	}
-	var userModel User
-	if err := DB.Where("email = ?", il.Email).First(&userModel).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			return ResponseCustom(406, "user not found")(ginContext)
-		} else {
-			return ResponseInternalError(err, errorLoginUserQuery)(ginContext)
+func login(params *StartServiceParameters) Handler {
+	return func(ginContext *gin.Context) Response {
+		authorizeIp, err := authorizeIpFromBlacklistBruteForce(ginContext)
+		if err != nil {
+			return ResponseInternalError(err, errorAuthorizeIpFromBlacklistLogin)(ginContext)
 		}
+		if !authorizeIp {
+			return ResponseCustom(429, "too many tries")(ginContext)
+		}
+		var il inputLogin
+		if err := ginContext.ShouldBindJSON(&il); err != nil {
+			return ResponseInvalidJsonInput(ginContext)
+		}
+		if !ValidEmail(il.Email) {
+			return ResponseInvalid("invalid email")(ginContext)
+		}
+		//use rune
+		passwordStringLength := stringLen(il.Password)
+		if passwordStringLength > passwordUserMaxLength || passwordStringLength < passwordUserMinLength {
+			return ResponseInvalid("invalid password")(ginContext)
+		}
+		var userModel User
+		if err := DB.Where("email = ?", il.Email).First(&userModel).Error; err != nil {
+			if gorm.IsRecordNotFoundError(err) {
+				return ResponseCustom(406, "user not found")(ginContext)
+			} else {
+				return ResponseInternalError(err, errorLoginUserQuery)(ginContext)
+			}
+		}
+		if err := bcrypt.CompareHashAndPassword([]byte(userModel.Password), []byte(il.Password)); err != nil {
+			return ResponseNotAuthorized(ginContext)
+		}
+		tokenTime := Configs.GetInt64("tokenTime")
+		uc := UserClaims{
+			userModel.ID,
+			ginContext.ClientIP(),
+			jwt.StandardClaims{
+				IssuedAt:  time.Now().Unix(),
+				Audience:  Configs.GetString("tokenAudience"),
+				Subject:   userModel.Email,
+				ExpiresAt: time.Now().Add(time.Duration(tokenTime) * time.Millisecond).Unix(),
+				Issuer:    Configs.GetString("tokenIssuer")}}
+		setStartAppConfigToGinContext(ginContext, userModel, uc.ExpiresAt, uc.IP)
+		tokenObject := jwt.NewWithClaims(jwt.SigningMethodRS512, uc)
+		tokenString, err := tokenObject.SignedString(getSignKey())
+		if err != nil {
+			return ResponseInternalError(err, errorTokenSignedString)(ginContext)
+		}
+		if il.Cookie {
+			ginContext.SetCookie(
+				Configs.GetString("cookie"),
+				tokenString,
+				int(tokenTime/1000),
+				Configs.GetString("path"),
+				Configs.GetString("domain"),
+				isProduction(),
+				true)
+		}
+		jsonResponseAuth := gin.H{
+			"token":  tokenString,
+			"header": Configs.GetString("customAuthenticationHeader"),
+		}
+		jsonResponseConfig := getStartAppConfigFromGinContext(ginContext)
+		if params.AuthReadResponse != nil {
+			jsonResponseConfig = params.AuthReadResponse(jsonResponseConfig)
+		}
+		return ResponseOkWithData(gin.H{"config": jsonResponseConfig, "auth": jsonResponseAuth})(ginContext)
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(userModel.Password), []byte(il.Password)); err != nil {
-		return ResponseNotAuthorized(ginContext)
-	}
-	tokenTime := Configs.GetInt64("tokenTime")
-	uc := UserClaims{
-		userModel.ID,
-		ginContext.ClientIP(),
-		jwt.StandardClaims{
-			IssuedAt:  time.Now().Unix(),
-			Audience:  Configs.GetString("tokenAudience"),
-			Subject:   userModel.Email,
-			ExpiresAt: time.Now().Add(time.Duration(tokenTime) * time.Millisecond).Unix(),
-			Issuer:    Configs.GetString("tokenIssuer")}}
-	setStartAppConfigToGinContext(ginContext, userModel, uc.ExpiresAt, uc.IP)
-	tokenObject := jwt.NewWithClaims(jwt.SigningMethodRS512, uc)
-	tokenString, err := tokenObject.SignedString(getSignKey())
-	if err != nil {
-		return ResponseInternalError(err, errorTokenSignedString)(ginContext)
-	}
-	if il.Cookie {
-		ginContext.SetCookie(
-			Configs.GetString("cookie"),
-			tokenString,
-			int(tokenTime/1000),
-			Configs.GetString("path"),
-			Configs.GetString("domain"),
-			isProduction(),
-			true)
-	}
-	jsonResponseAuth := gin.H{
-		"token":  tokenString,
-		"header": Configs.GetString("customAuthenticationHeader"),
-	}
-	jsonResponseConfig := getStartAppConfigFromGinContext(ginContext)
-	return ResponseOkWithData(gin.H{"config": jsonResponseConfig, "auth": jsonResponseAuth})(ginContext)
 }
 
 var logout Handler = func(ginContext *gin.Context) Response {
