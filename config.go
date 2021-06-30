@@ -74,12 +74,12 @@ func startConfig(params *StartServiceParameters) {
 	jwtAlias := "jwtKey"
 	configMapper := []MapConfig{
 		{Key: "ginMode", Value: "debug", Validator: ValidateGinMode},
-		{Key: "allowHeaders", Value: "Origin,X-Request-Width,Content-Type,Accept", Validator: ValidateCommaArrayString},
-		{Key: "allowOrigins", Value: "http://localhost:8080", Validator: ValidateCommaArrayString},
+		{Key: "allowHeaders", Value: "Origin,X-Request-Width,Content-Type,Accept,Authorization", Validator: ValidateCommaArrayString},
+		{Key: "allowOrigins", Value: "*", Validator: ValidateCommaArrayString},
 		{Key: "path", Value: "/api/v1", Validator: ValidatePath},
 		{Key: "logOkStatus", Value: "false", Validator: ValidateBoolean},
-		{Key: "printDeniedRequestDump", Value: "true", Validator: ValidateBoolean},
-		{Key: "allowEmptyOrigin", Value: "false", Validator: ValidateBoolean},
+		{Key: "printDeniedRequestDump", Value: "false", Validator: ValidateBoolean},
+		{Key: "allowEmptyOrigin", Value: "true", Validator: ValidateBoolean},
 	}
 	if params.AuthFramework {
 		configMapperExtra := []MapConfig{
@@ -89,7 +89,7 @@ func startConfig(params *StartServiceParameters) {
 			{Key: "tokenTime", Value: "31540000000", Validator: ValidateNotZeroInt64},
 			{Key: "tokenAudience", Value: "RP_WEB_LIB", Validator: ValidateStringNotEmpty},
 			{Key: "tokenIssuer", Value: "RP_WEB_LIB", Validator: ValidateStringNotEmpty},
-			{Key: "verifyTokenIp", Value: "true", Validator: ValidateBoolean},
+			{Key: "verifyTokenIp", Value: "false", Validator: ValidateBoolean},
 			{Key: "bruteForceCountAttemptsByIp", Value: "3", Validator: ValidateNotZeroUint64},
 			{Key: "bruteForceTimeMinutesAttemptsByIp", Value: "5", Validator: ValidateNotZeroUint64},
 			{Key: jwtAlias, Value: "", Validator: nil},
