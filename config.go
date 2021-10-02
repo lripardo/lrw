@@ -80,6 +80,7 @@ func startConfig(params *StartServiceParameters) {
 		{Key: "logOkStatus", Value: "false", Validator: ValidateBoolean},
 		{Key: "printDeniedRequestDump", Value: "false", Validator: ValidateBoolean},
 		{Key: "allowEmptyOrigin", Value: "true", Validator: ValidateBoolean},
+		{Key: "version", Value: "d682ed6c", Validator: ValidateStringNotEmpty},
 	}
 	if params.AuthFramework {
 		configMapperExtra := []MapConfig{

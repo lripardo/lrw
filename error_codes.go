@@ -12,4 +12,5 @@ const (
 	errorHashUserPasswordRegister      ErrorCode = 7
 	errorCreateUserRegister            ErrorCode = 8
 	errorAuthorizeIpFromBlacklistLogin ErrorCode = 9
+	errorGetVersionApp                 ErrorCode = 10
 )
