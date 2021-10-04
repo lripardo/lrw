@@ -13,4 +13,5 @@ const (
 	errorCreateUserRegister            ErrorCode = 8
 	errorAuthorizeIpFromBlacklistLogin ErrorCode = 9
 	errorGetVersionApp                 ErrorCode = 10
+	errorCustomAuthReadResponse        ErrorCode = 11
 )

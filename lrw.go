@@ -27,7 +27,7 @@ type StartServiceParameters struct {
 	ModelsMigration  []interface{}
 	SetForeignKeys   func(*gorm.DB)
 	Routes           func(*gin.RouterGroup)
-	AuthReadResponse func(gin.H) gin.H
+	AuthReadResponse func(gin.H) (gin.H, error)
 	Network          string
 	CustomUserModel  interface{}
 }

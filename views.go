@@ -35,7 +35,11 @@ func read(params *StartServiceParameters) Handler {
 		}
 		jsonResponse["version"] = version.Data
 		if params.AuthReadResponse != nil {
-			jsonResponse = params.AuthReadResponse(jsonResponse)
+			jr, err := params.AuthReadResponse(jsonResponse)
+			if err != nil {
+				return ResponseInternalError(err, errorCustomAuthReadResponse)(ginContext)
+			}
+			jsonResponse = jr
 		}
 		return ResponseOkWithData(jsonResponse)(ginContext)
 	}

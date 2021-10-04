@@ -218,7 +218,11 @@ func login(params *StartServiceParameters) Handler {
 		}
 		jsonResponseConfig := getStartAppConfigFromGinContext(ginContext)
 		if params.AuthReadResponse != nil {
-			jsonResponseConfig = params.AuthReadResponse(jsonResponseConfig)
+			jr, err := params.AuthReadResponse(jsonResponseConfig)
+			if err != nil {
+				return ResponseInternalError(err, errorCustomAuthReadResponse)(ginContext)
+			}
+			jsonResponseConfig = jr
 		}
 		return ResponseOkWithData(gin.H{"config": jsonResponseConfig, "auth": jsonResponseAuth})(ginContext)
 	}
