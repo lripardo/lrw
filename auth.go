@@ -139,7 +139,7 @@ func getStartAppConfigFromGinContext(ginContext *gin.Context) gin.H {
 	userContext := GetUserFromGinContext(ginContext)
 	expires := ginContext.GetInt64("expires")
 	claimIp := ginContext.GetString("claim_ip")
-	userInfo := infoUser{ID: userContext.ID, Name: userContext.Name, Role: userContext.Role, Email: userContext.Email}
+	userInfo := InfoUser{ID: userContext.ID, Name: userContext.Name, Role: userContext.Role, Email: userContext.Email}
 	jsonResponse := gin.H{
 		"user":     userInfo,
 		"expires":  time.Unix(expires, 0),
