@@ -29,6 +29,7 @@ type StartServiceParameters struct {
 	Routes           func(*gin.RouterGroup)
 	AuthReadResponse func(gin.H) gin.H
 	Network          string
+	CustomUserModel  interface{}
 }
 
 func DefaultStartServiceParams() *StartServiceParameters {
@@ -41,6 +42,7 @@ func DefaultStartServiceParams() *StartServiceParameters {
 		Routes:           nil,
 		AuthReadResponse: nil,
 		Network:          "tcp4",
+		CustomUserModel:  nil,
 	}
 }
 

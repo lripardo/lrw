@@ -123,7 +123,11 @@ func startDatabase(params *StartServiceParameters) {
 	if makeMigration {
 		DB.AutoMigrate(&Config{}, &Log{})
 		if params.AuthFramework {
-			DB.AutoMigrate(&User{})
+			if params.CustomUserModel != nil {
+				DB.AutoMigrate(params.CustomUserModel)
+			} else {
+				DB.AutoMigrate(&User{})
+			}
 			DB.Model(&Log{}).AddForeignKey("user", fmt.Sprintf("%s(id)", User{}.TableName()), "RESTRICT", "RESTRICT")
 		}
 		if params.ModelsMigration != nil {
