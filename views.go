@@ -29,11 +29,6 @@ var globalFilter Handler = func(ginContext *gin.Context) Response {
 func read(params *StartServiceParameters) Handler {
 	return func(ginContext *gin.Context) Response {
 		jsonResponse := GetStartAppConfigFromGinContext(ginContext)
-		var version Config
-		if err := DB.Where("name = ?", "version").First(&version).Error; err != nil {
-			return ResponseInternalError(err, errorGetVersionApp)(ginContext)
-		}
-		jsonResponse["version"] = version.Data
 		if params.AuthReadResponse != nil {
 			jr, err := params.AuthReadResponse(jsonResponse)
 			if err != nil {
@@ -146,6 +141,11 @@ func response(status uint, message string, data interface{}, code *uint, ginCont
 	ginContext.Header("X-Frame-Options", "DENY")
 	ginContext.Header("Referrer-Policy", "no-referrer")
 	//
+	var version Config
+	if err := DB.Where("name = ?", "version").First(&version).Error; err != nil {
+		log.Println(err)
+	}
+	ginContext.Header("App-Version", version.Data)
 	ginContext.AbortWithStatusJSON(200, gin.H{"message": message, "status": status, "data": data})
 	return Next
 }
