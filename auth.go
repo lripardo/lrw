@@ -118,7 +118,7 @@ func AuthorizeIpFromBlacklistBruteForce(ginContext *gin.Context) (bool, error) {
 	lastTimestamp := time.Now().Add(time.Duration(-int(bruteForceTimeMinutesAttemptsByIp)) * time.Minute)
 	var attempts uint64
 	if err := DB.Model(&Log{}).
-		Where("status IN ? and created_at >= ? and ip = ?", []string{"401", "406", "409"}, lastTimestamp, ginContext.ClientIP()).
+		Where("status IN (?) and created_at >= ? and ip = ?", []string{"401", "406", "409"}, lastTimestamp, ginContext.ClientIP()).
 		Count(&attempts).Error; err != nil {
 		return false, err
 	}
