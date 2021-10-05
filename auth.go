@@ -350,7 +350,7 @@ func changePassword(params *StartServiceParameters) Handler {
 		if err != nil {
 			return ResponseInternalError(err, errorHashUserPasswordRegister)(ginContext)
 		}
-		if err := DB.Model(user).Updates(map[string]interface{}{"password": newHashPassword, "has_to_change_password": 0}).Error; err != nil {
+		if err := DB.Model(user).Updates(map[string]interface{}{"password": newHashPassword, "has_to_change_password": false}).Error; err != nil {
 			return ResponseInternalError(err, errorUpdateNewPassword)(ginContext)
 		}
 		return ResponseOk(ginContext)
