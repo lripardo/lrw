@@ -75,7 +75,7 @@ func StartService(params *StartServiceParameters) {
 		authRouterGroup.POST("login", login(params).Gin())
 		authRouterGroup.POST("logout", logout.Gin())
 		authRouterGroup.POST("register", register(params).Gin())
-		authRouterGroup.PUT("change-password", changePassword(params).Gin())
+		authRouterGroup.PUT("change-password", Authenticate.Gin(), changePassword(params).Gin())
 	}
 	if params.Routes != nil {
 		params.Routes(rootRouterGroup)

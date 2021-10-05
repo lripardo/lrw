@@ -19,10 +19,14 @@ type UserClaims struct {
 }
 
 type InputLogin struct {
-	Email       string `json:"email"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Cookie   bool   `json:"cookie"`
+}
+
+type InputChangePassword struct {
 	Password    string `json:"password"`
-	Cookie      bool   `json:"cookie,omitempty"`
-	NewPassword string `json:"new_password,omitempty"`
+	NewPassword string `json:"new_password"`
 }
 
 type RegisterUser struct {
@@ -189,43 +193,35 @@ func IsValidPassword(password string) bool {
 	return false
 }
 
-func AuthorizeUser(ginContext *gin.Context) (*User, *InputLogin, Handler) {
-	authorizeIp, err := AuthorizeIpFromBlacklistBruteForce(ginContext)
-	if err != nil {
-		return nil, nil, ResponseInternalError(err, errorAuthorizeIpFromBlacklistLogin)
-	}
-	if !authorizeIp {
-		return nil, nil, ResponseCustom(429, "too many tries")
-	}
-	var il InputLogin
-	if err := ginContext.ShouldBindJSON(&il); err != nil {
-		return nil, nil, ResponseInvalidJsonInput
-	}
-	if !ValidEmail(il.Email) {
-		return nil, nil, ResponseInvalid("invalid email")
-	}
-	if !IsValidPassword(il.Password) {
-		return nil, nil, ResponseInvalid("invalid password")
-	}
-	var userModel User
-	if err := DB.Where("email = ?", il.Email).First(&userModel).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			return nil, nil, ResponseCustom(406, "user not found")
-		} else {
-			return nil, nil, ResponseInternalError(err, errorLoginUserQuery)
-		}
-	}
-	if !IsHashPassword(il.Password, userModel.Password) {
-		return nil, nil, ResponseNotAuthorized
-	}
-	return &userModel, &il, nil
-}
-
 func login(params *StartServiceParameters) Handler {
 	return func(ginContext *gin.Context) Response {
-		userModel, il, handler := AuthorizeUser(ginContext)
-		if handler != nil {
-			return handler(ginContext)
+		authorizeIp, err := AuthorizeIpFromBlacklistBruteForce(ginContext)
+		if err != nil {
+			return ResponseInternalError(err, errorAuthorizeIpFromBlacklistLogin)(ginContext)
+		}
+		if !authorizeIp {
+			return ResponseCustom(429, "too many tries")(ginContext)
+		}
+		var inputLogin InputLogin
+		if err := ginContext.ShouldBindJSON(&inputLogin); err != nil {
+			return ResponseInvalidJsonInput(ginContext)
+		}
+		if !ValidEmail(inputLogin.Email) {
+			return ResponseInvalid("invalid email")(ginContext)
+		}
+		if !IsValidPassword(inputLogin.Password) {
+			return ResponseInvalid("invalid password")(ginContext)
+		}
+		var userModel User
+		if err := DB.Where("email = ?", inputLogin.Email).First(&userModel).Error; err != nil {
+			if gorm.IsRecordNotFoundError(err) {
+				return ResponseCustom(406, "user not found")(ginContext)
+			} else {
+				return ResponseInternalError(err, errorLoginUserQuery)(ginContext)
+			}
+		}
+		if !IsHashPassword(inputLogin.Password, userModel.Password) {
+			return ResponseNotAuthorized(ginContext)
 		}
 		tokenTime := Configs.GetInt64("tokenTime")
 		uc := UserClaims{
@@ -237,13 +233,13 @@ func login(params *StartServiceParameters) Handler {
 				Subject:   userModel.Email,
 				ExpiresAt: time.Now().Add(time.Duration(tokenTime) * time.Millisecond).Unix(),
 				Issuer:    Configs.GetString("tokenIssuer")}}
-		SetStartAppConfigToGinContext(ginContext, *userModel, uc.ExpiresAt, uc.IP)
+		SetStartAppConfigToGinContext(ginContext, userModel, uc.ExpiresAt, uc.IP)
 		tokenObject := jwt.NewWithClaims(jwt.SigningMethodRS512, uc)
 		tokenString, err := tokenObject.SignedString(getSignKey())
 		if err != nil {
 			return ResponseInternalError(err, errorTokenSignedString)(ginContext)
 		}
-		if il.Cookie {
+		if inputLogin.Cookie {
 			ginContext.SetCookie(
 				Configs.GetString("cookie"),
 				tokenString,
@@ -323,18 +319,32 @@ func register(params *StartServiceParameters) Handler {
 
 func changePassword(params *StartServiceParameters) Handler {
 	return func(ginContext *gin.Context) Response {
-		userModel, il, handler := AuthorizeUser(ginContext)
-		if handler != nil {
-			return handler(ginContext)
+		authorizeIp, err := AuthorizeIpFromBlacklistBruteForce(ginContext)
+		if err != nil {
+			return ResponseInternalError(err, errorAuthorizeIpFromBlacklistLogin)(ginContext)
 		}
-		if !IsValidPassword(il.NewPassword) {
+		if !authorizeIp {
+			return ResponseCustom(429, "too many tries")(ginContext)
+		}
+		var inputChangePassword InputChangePassword
+		if err := ginContext.ShouldBindJSON(&inputChangePassword); err != nil {
+			return ResponseInvalidJsonInput(ginContext)
+		}
+		if !IsValidPassword(inputChangePassword.Password) {
+			return ResponseInvalid("invalid password")(ginContext)
+		}
+		if !IsValidPassword(inputChangePassword.NewPassword) {
 			return ResponseInvalid("invalid new password")(ginContext)
 		}
-		newHashPassword, err := HashPassword(il.NewPassword, params.BCryptCost)
+		user := GetUserFromGinContext(ginContext)
+		if !IsHashPassword(inputChangePassword.Password, user.Password) {
+			return ResponseNotAuthorized(ginContext)
+		}
+		newHashPassword, err := HashPassword(inputChangePassword.NewPassword, params.BCryptCost)
 		if err != nil {
 			return ResponseInternalError(err, errorHashUserPasswordRegister)(ginContext)
 		}
-		if err := DB.Model(&userModel).Updates(map[string]interface{}{"password": newHashPassword, "has_to_change_password": 0}).Error; err != nil {
+		if err := DB.Model(user).Updates(map[string]interface{}{"password": newHashPassword, "has_to_change_password": 0}).Error; err != nil {
 			return ResponseInternalError(err, errorUpdateNewPassword)(ginContext)
 		}
 		return ResponseOk(ginContext)
