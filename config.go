@@ -74,7 +74,7 @@ func startConfig(params *StartServiceParameters) {
 	jwtAlias := "jwtKey"
 	configMapper := []MapConfig{
 		{Key: "ginMode", Value: "debug", Validator: ValidateGinMode},
-		{Key: "allowHeaders", Value: "Origin,X-Request-Width,Content-Type,Accept,Authorization,App-Version", Validator: ValidateCommaArrayString},
+		{Key: "allowHeaders", Value: "Origin,X-Request-Width,Content-Type,Accept,Authorization", Validator: ValidateCommaArrayString},
 		{Key: "allowOrigins", Value: "http://localhost:8080", Validator: ValidateCommaArrayString},
 		{Key: "path", Value: "/api/v1", Validator: ValidatePath},
 		{Key: "logOkStatus", Value: "false", Validator: ValidateBoolean},
