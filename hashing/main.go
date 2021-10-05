@@ -7,5 +7,6 @@ import (
 
 func main() {
 	config := lrw.DefaultStartServiceParams()
+	fmt.Println(lrw.HashSHA512("changeme"))
 	fmt.Println(lrw.HashPassword("changeme", config.BCryptCost))
 }

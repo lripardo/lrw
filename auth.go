@@ -146,7 +146,13 @@ func GetStartAppConfigFromGinContext(ginContext *gin.Context) gin.H {
 	userContext := GetUserFromGinContext(ginContext)
 	expires := ginContext.GetInt64("expires")
 	claimIp := ginContext.GetString("claim_ip")
-	userInfo := InfoUser{ID: userContext.ID, Name: userContext.Name, Role: userContext.Role, Email: userContext.Email, HasToChangePassword: userContext.HasToChangePassword}
+	userInfo := InfoUser{
+		ID:                  userContext.ID,
+		Name:                userContext.Name,
+		Role:                userContext.Role,
+		Email:               userContext.Email,
+		HasToChangePassword: userContext.HasToChangePassword,
+	}
 	jsonResponse := gin.H{
 		"user":     userInfo,
 		"expires":  time.Unix(expires, 0),
@@ -178,7 +184,7 @@ func HashPassword(password string, cost int) (string, error) {
 
 func IsHashPassword(password, hash string) bool {
 	hashedPassword := HashSHA512(password)
-	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(hash)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(hashedPassword)); err != nil {
 		return false
 	}
 	return true
