@@ -13,11 +13,12 @@ type Model struct {
 
 type User struct {
 	Model
-	Email          string `gorm:"type:varchar(320);not null"`
-	Password       string `gorm:"type:char(60);not null"`
-	Name           string `gorm:"type:varchar(255);not null"`
-	Role           string `gorm:"type:varchar(11);not null"`
-	TokenTimestamp *time.Time
+	Email               string `gorm:"type:varchar(320);not null"`
+	Password            string `gorm:"type:char(60);not null"`
+	Name                string `gorm:"type:varchar(255);not null"`
+	Role                string `gorm:"type:varchar(11);not null"`
+	HasToChangePassword bool   `gorm:"type:tinyint;not null"`
+	TokenTimestamp      *time.Time
 }
 
 type Config struct {

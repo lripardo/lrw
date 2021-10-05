@@ -5,6 +5,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net"
 	"net/http"
@@ -30,6 +31,7 @@ type StartServiceParameters struct {
 	AuthReadResponse func(gin.H) (gin.H, error)
 	Network          string
 	CustomUserModel  interface{}
+	BCryptCost       int
 }
 
 func DefaultStartServiceParams() *StartServiceParameters {
@@ -43,6 +45,7 @@ func DefaultStartServiceParams() *StartServiceParameters {
 		AuthReadResponse: nil,
 		Network:          "tcp4",
 		CustomUserModel:  nil,
+		BCryptCost:       bcrypt.DefaultCost,
 	}
 }
 
@@ -71,7 +74,8 @@ func StartService(params *StartServiceParameters) {
 		authRouterGroup := rootRouterGroup.Group("auth")
 		authRouterGroup.POST("login", login(params).Gin())
 		authRouterGroup.POST("logout", logout.Gin())
-		authRouterGroup.POST("register", register.Gin())
+		authRouterGroup.POST("register", register(params).Gin())
+		authRouterGroup.POST("change-password", changePassword(params).Gin())
 	}
 	if params.Routes != nil {
 		params.Routes(rootRouterGroup)

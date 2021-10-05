@@ -14,4 +14,5 @@ const (
 	errorAuthorizeIpFromBlacklistLogin ErrorCode = 9
 	errorGetVersionApp                 ErrorCode = 10
 	errorCustomAuthReadResponse        ErrorCode = 11
+	errorUpdateNewPassword             ErrorCode = 12
 )

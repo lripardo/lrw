@@ -8,10 +8,11 @@ import (
 )
 
 type InfoUser struct {
-	ID    uint64 `json:"id"`
-	Name  string `json:"name"`
-	Role  string `json:"role"`
-	Email string `json:"email"`
+	ID                  uint64 `json:"id"`
+	Name                string `json:"name"`
+	Role                string `json:"role"`
+	Email               string `json:"email"`
+	HasToChangePassword bool   `json:"has_to_change_password"`
 }
 
 func GetUserFromGinContext(ginContext *gin.Context) *User {

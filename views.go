@@ -28,7 +28,7 @@ var globalFilter Handler = func(ginContext *gin.Context) Response {
 
 func read(params *StartServiceParameters) Handler {
 	return func(ginContext *gin.Context) Response {
-		jsonResponse := getStartAppConfigFromGinContext(ginContext)
+		jsonResponse := GetStartAppConfigFromGinContext(ginContext)
 		var version Config
 		if err := DB.Where("name = ?", "version").First(&version).Error; err != nil {
 			return ResponseInternalError(err, errorGetVersionApp)(ginContext)
