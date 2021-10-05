@@ -145,7 +145,6 @@ func response(status uint, message string, data interface{}, code *uint, ginCont
 	if err := DB.Where("name = ?", "version").First(&version).Error; err != nil {
 		log.Println(err)
 	}
-	ginContext.Header("App-Version", version.Data)
-	ginContext.AbortWithStatusJSON(200, gin.H{"message": message, "status": status, "data": data})
+	ginContext.AbortWithStatusJSON(200, gin.H{"message": message, "status": status, "data": data, "app_version": version.Data})
 	return Next
 }
