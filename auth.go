@@ -271,7 +271,7 @@ func login(params *StartServiceParameters) Handler {
 	}
 }
 
-var logout Handler = func(ginContext *gin.Context) Response {
+func ClearCookie(ginContext *gin.Context) {
 	ginContext.SetCookie(
 		Configs.GetString("cookie"),
 		"",
@@ -280,6 +280,10 @@ var logout Handler = func(ginContext *gin.Context) Response {
 		Configs.GetString("domain"),
 		IsProduction(),
 		true)
+}
+
+var logout Handler = func(ginContext *gin.Context) Response {
+	ClearCookie(ginContext)
 	return ResponseOk(ginContext)
 }
 
@@ -357,6 +361,7 @@ func changePassword(params *StartServiceParameters) Handler {
 		}).Error; err != nil {
 			return ResponseInternalError(err, errorUpdateNewPassword)(ginContext)
 		}
+		ClearCookie(ginContext)
 		return ResponseOk(ginContext)
 	}
 }
