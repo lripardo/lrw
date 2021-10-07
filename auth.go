@@ -289,6 +289,13 @@ var logout Handler = func(ginContext *gin.Context) Response {
 
 func register(params *StartServiceParameters) Handler {
 	return func(ginContext *gin.Context) Response {
+		authorizeIp, err := AuthorizeIpFromBlacklistBruteForce(ginContext)
+		if !authorizeIp {
+			return ResponseCustom(429, "too many tries")(ginContext)
+		}
+		if err != nil {
+			return ResponseInternalError(err, errorAuthorizeIpFromBlacklistLogin)(ginContext)
+		}
 		var ru RegisterUser
 		if err := ginContext.ShouldBindJSON(&ru); err != nil {
 			return ResponseInvalidJsonInput(ginContext)
