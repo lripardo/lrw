@@ -75,9 +75,8 @@ func GetUserFromRequest(ginContext *gin.Context) (*User, *UserClaims, Handler) {
 	if !tokenObject.Valid {
 		if _, ok := err.(*jwt.ValidationError); ok {
 			return nil, nil, ResponseNotAuthorized
-		} else {
-			return nil, nil, ResponseInternalError(err, errorTokenInvalid)
 		}
+		return nil, nil, ResponseInternalError(err, errorTokenInvalid)
 	}
 	uc, ok := tokenObject.Claims.(*UserClaims)
 	if !ok {
@@ -95,9 +94,8 @@ func GetUserFromRequest(ginContext *gin.Context) (*User, *UserClaims, Handler) {
 	if err := DB.First(&userModel, uc.ID).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return nil, nil, ResponseNotAuthorized
-		} else {
-			return nil, nil, ResponseInternalError(err, errorAuthUserQuery)
 		}
+		return nil, nil, ResponseInternalError(err, errorAuthUserQuery)
 	}
 	if userModel.TokenTimestamp != nil {
 		if time.Unix(uc.IssuedAt, 0).Before(*userModel.TokenTimestamp) {
@@ -222,9 +220,8 @@ func login(params *StartServiceParameters) Handler {
 		if err := DB.Where("email = ?", inputLogin.Email).First(&userModel).Error; err != nil {
 			if gorm.IsRecordNotFoundError(err) {
 				return ResponseCustom(406, "user not found")(ginContext)
-			} else {
-				return ResponseInternalError(err, errorLoginUserQuery)(ginContext)
 			}
+			return ResponseInternalError(err, errorLoginUserQuery)(ginContext)
 		}
 		if !IsHashPassword(inputLogin.Password, userModel.Password) {
 			return ResponseNotAuthorized(ginContext)
