@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
 	"regexp"
 	"time"
 )
@@ -243,6 +244,7 @@ func login(params *StartServiceParameters) Handler {
 			return ResponseInternalError(err, errorTokenSignedString)(ginContext)
 		}
 		if inputLogin.Cookie {
+			ginContext.SetSameSite(http.SameSiteStrictMode)
 			ginContext.SetCookie(
 				Configs.GetString("cookie"),
 				tokenString,
@@ -269,6 +271,7 @@ func login(params *StartServiceParameters) Handler {
 }
 
 func ClearCookie(ginContext *gin.Context) {
+	ginContext.SetSameSite(http.SameSiteStrictMode)
 	ginContext.SetCookie(
 		Configs.GetString("cookie"),
 		"",
