@@ -44,6 +44,9 @@ func IsJSONStringArray() *Validator {
 			if err := json.Unmarshal([]byte(fieldLevel.Field().String()), &array); err != nil {
 				return false
 			}
+			if array == nil {
+				return false
+			}
 			for _, item := range array {
 				if item == "" {
 					return false
@@ -60,6 +63,9 @@ func IsHeaderArray() *Validator {
 		ValidatorFunc: func(fieldLevel validator.FieldLevel) bool {
 			var array []string
 			if err := json.Unmarshal([]byte(fieldLevel.Field().String()), &array); err != nil {
+				return false
+			}
+			if array == nil {
 				return false
 			}
 			for _, item := range array {
