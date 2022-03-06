@@ -34,6 +34,11 @@ var (
 	MySQLMaxOpenConnections = api.NewKey("MYSQL_MAX_OPEN_CONNECTIONS", "gte=0", "2")
 )
 
+type GormDB struct {
+	DB      *gorm.DB
+	Migrate bool
+}
+
 func newGormConfig(configuration api.Configuration) *gorm.Config {
 	discard := configuration.Bool(GormLoggerDiscard)
 	loggerMode := configuration.Int(GormLoggerMode)
@@ -52,13 +57,20 @@ func newGormConfig(configuration api.Configuration) *gorm.Config {
 	}
 }
 
-func newSQLiteGormDb(configuration api.Configuration, config *gorm.Config) (*gorm.DB, error) {
+func newSQLiteGormDb(configuration api.Configuration, config *gorm.Config, migrate bool) (*GormDB, error) {
 	database := configuration.String(SQLiteDatabase)
 	api.D("getting database from sqlite implementation")
-	return gorm.Open(sqlite.Open(fmt.Sprintf("file:%s?mode=memory&cache=shared", database)), config)
+	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("file:%s?mode=memory&cache=shared", database)), config)
+	if err != nil {
+		return nil, err
+	}
+	return &GormDB{
+		DB:      db,
+		Migrate: migrate,
+	}, nil
 }
 
-func newMySQLGormDb(configuration api.Configuration, config *gorm.Config) (*gorm.DB, error) {
+func newMySQLGormDb(configuration api.Configuration, config *gorm.Config, migrate bool) (*GormDB, error) {
 	url := configuration.String(MySQLUrl)
 	user := configuration.String(MySQLUser)
 	password := configuration.String(MySQLPassword)
@@ -84,15 +96,19 @@ func newMySQLGormDb(configuration api.Configuration, config *gorm.Config) (*gorm
 	mysqlDB.SetMaxOpenConns(maxOpenConnections)
 
 	api.D("getting database from mysql implementation")
-	return db, nil
+	return &GormDB{
+		DB:      db,
+		Migrate: migrate,
+	}, nil
 }
 
-func NewGormDB(configuration api.Configuration) (*gorm.DB, error) {
+func NewGormDB(configuration api.Configuration) (*GormDB, error) {
 	config := newGormConfig(configuration)
+	migrate := configuration.Bool(GormMigrate)
 
 	gormType := configuration.String(GormDriverType)
 	if gormType == MySQLGormYpe {
-		return newMySQLGormDb(configuration, config)
+		return newMySQLGormDb(configuration, config, migrate)
 	}
-	return newSQLiteGormDb(configuration, config)
+	return newSQLiteGormDb(configuration, config, migrate)
 }
