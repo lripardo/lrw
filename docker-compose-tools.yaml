@@ -1,0 +1,48 @@
+version: "3.7"
+
+services:
+  db:
+    image: mariadb:10.7.1
+    ports:
+      - "3306:3306"
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      MYSQL_USER: lrw
+      MYSQL_DATABASE: lrw
+      MYSQL_PASSWORD: lrw
+      MYSQL_ROOT_PASSWORD: root
+
+  cache:
+    image: redis:alpine3.15
+    ports:
+      - "6379:6379"
+    command: --requirepass redis
+    volumes:
+      - cache:/data
+
+  phpmyadmin:
+    image: phpmyadmin:5.1-apache
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+      PMA_PMADB: phpmyadmin
+    depends_on:
+      - db
+
+  phpredisadmin:
+    image: erikdubbelboer/phpredisadmin:v1.13.2
+    ports:
+      - "8082:80"
+    environment:
+      REDIS_1_HOST: cache
+      REDIS_1_AUTH: redis
+    depends_on:
+      - cache
+
+volumes:
+  database:
+  cache:
