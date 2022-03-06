@@ -17,7 +17,8 @@ var (
 )
 
 const (
-	ResetPasswordParam = "tk"
+	// ResetParam is the name of http param for token
+	ResetParam = "tk"
 )
 
 type ResetPassword struct {
@@ -49,7 +50,7 @@ func (r *ResetPassword) Start(user *User) {
 		Sender:   r.sender,
 		User:     user,
 		Key:      r.key,
-		Param:    ResetPasswordParam,
+		Param:    ResetParam,
 		Audience: r.audience,
 		Issuer:   r.issuer,
 		Route:    r.route,
