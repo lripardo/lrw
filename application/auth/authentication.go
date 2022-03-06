@@ -199,6 +199,9 @@ func (u *App) ResetPassword(ctx api.Context) *api.Response {
 	if err := u.userRepository.UpdatePassword(user); err != nil {
 		return api.ResponseInternalError(err)
 	}
+	if err := u.userRepository.MakeVerified(claims.Subject); err != nil {
+		return api.ResponseInternalError(err)
+	}
 	if err := u.authentication.DeleteUserContext(user.Email); err != nil {
 		return api.ResponseInternalError(err)
 	}
