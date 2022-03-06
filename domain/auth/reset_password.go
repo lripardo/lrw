@@ -6,19 +6,20 @@ import (
 	"time"
 )
 
+const (
+	// ResetParam is the name of http param for token
+	ResetParam        = "tk"
+	DefaultResetRoute = "http://localhost:8080/api/v1/auth/reset-password"
+)
+
 var (
 	ResetPasswordKey          = api.NewKey("AUTH_RESET_PASSWORD_KEY", api.KeyValid, "")
 	ResetPasswordTemplateName = api.NewKey("AUTH_RESET_PASSWORD_TEMPLATE_NAME", "required", "ResetPasswordTemplate")
 	ResetPasswordAudience     = api.NewKey("AUTH_RESET_PASSWORD_AUDIENCE", "required", "auth.reset.password.audience")
 	ResetPasswordIssuer       = api.NewKey("AUTH_RESET_PASSWORD_ISSUER", "required", "auth.reset.password.issuer")
 	ResetPasswordExpires      = api.NewKey("AUTH_RESET_PASSWORD_EXPIRES", "gte=1", "5")
-	ResetPasswordRoute        = api.NewKey("AUTH_RESET_PASSWORD_ROUTE", "required", "http://localhost:8080/api/v1/auth/reset-password")
+	ResetPasswordRoute        = api.NewKey("AUTH_RESET_PASSWORD_ROUTE", "required", DefaultResetRoute)
 	ResetPasswordFrom         = api.NewKey("AUTH_RESET_PASSWORD_FROM", "email", "reset_password@lripardo.github.com")
-)
-
-const (
-	// ResetParam is the name of http param for token
-	ResetParam = "tk"
 )
 
 type ResetPassword struct {
