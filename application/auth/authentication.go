@@ -7,6 +7,8 @@ import (
 	"net/http"
 )
 
+const UserNotFoundMessage = "user not found"
+
 var (
 	PasswordCost                 = api.NewKey("AUTH_APP_PASSWORD_COST", "gte=4,lte=31", "10")
 	AppShowUserExists            = api.NewKey("AUTH_APP_SHOW_USER_EXISTS", api.Boolean, "true")
@@ -100,7 +102,7 @@ func (u *App) Login(ctx api.Context) *api.Response {
 		if u.showUserNotFound {
 			return api.ResponseNotFound()
 		}
-		api.D("user not found")
+		api.D(UserNotFoundMessage)
 		return api.ResponseUnauthorized()
 	}
 	if !user.IsPassword(input.Password) {
@@ -163,7 +165,7 @@ func (u *App) SendVerify(ctx api.Context) *api.Response {
 		if u.showUserNotFound {
 			return api.ResponseNotFound()
 		}
-		api.D("user not found")
+		api.D(UserNotFoundMessage)
 		return api.ResponseOk()
 	}
 	u.userVerify.Start(user)
@@ -188,7 +190,7 @@ func (u *App) ResetPassword(ctx api.Context) *api.Response {
 		return api.ResponseInternalError(err)
 	}
 	if allow := u.resetPassword.AllowChangePassword(user); !allow {
-		api.D("user has change your password recently, wait until the configured token reset password life expires plus 1 minute")
+		api.D("password changed recently, wait until the token reset password life expires plus 1 minute")
 		return api.ResponseForbidden()
 	}
 	if err := user.HashPassword(input.Password, u.passwordCost); err != nil {
@@ -216,7 +218,7 @@ func (u *App) SendResetPassword(ctx api.Context) *api.Response {
 		if u.showUserNotFound {
 			return api.ResponseNotFound()
 		}
-		api.D("user not found")
+		api.D(UserNotFoundMessage)
 		return api.ResponseOk()
 	}
 	u.resetPassword.Start(user)

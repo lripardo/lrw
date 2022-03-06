@@ -16,30 +16,34 @@ type Gin struct {
 	engine *gin.Engine
 }
 
+func doResponse(ginContext *gin.Context, response *api.Response) {
+	if response.Redirect != "" {
+		ginContext.Redirect(response.Status, response.Redirect)
+		ginContext.Abort()
+		return
+	}
+
+	if response.Error != nil {
+		if gin.IsDebugging() {
+			response.Message = response.Error.Error()
+		}
+		api.E(ginContext, "Error", response.Error)
+	}
+
+	if response.Message == "" {
+		response.Message = http.StatusText(response.Status)
+	}
+
+	ginContext.AbortWithStatusJSON(response.Status, response)
+}
+
 func ginHandlersWrap(handlers ...api.Handler) func(*gin.Context) {
 	return func(ginContext *gin.Context) {
 		for _, h := range handlers {
 			response := h(ginContext)
 
 			if response != nil {
-				if response.Redirect != "" {
-					ginContext.Redirect(response.Status, response.Redirect)
-					ginContext.Abort()
-					return
-				}
-
-				if response.Error != nil {
-					if gin.IsDebugging() {
-						response.Message = response.Error.Error()
-					}
-					api.E(ginContext, "Error", response.Error)
-				}
-
-				if response.Message == "" {
-					response.Message = http.StatusText(response.Status)
-				}
-
-				ginContext.AbortWithStatusJSON(response.Status, response)
+				doResponse(ginContext, response)
 				return
 			}
 		}

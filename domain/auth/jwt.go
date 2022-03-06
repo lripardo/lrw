@@ -23,12 +23,15 @@ func Claims(tokenString string, key []byte) (*jwt.StandardClaims, error) {
 		api.D("empty token string, returning nil")
 		return nil, nil
 	}
-	tokenObject, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return key, nil
-	})
+	tokenObject, err := jwt.ParseWithClaims(
+		tokenString,
+		&jwt.StandardClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return key, nil
+		})
 	if err != nil || tokenObject == nil {
 		api.D("error", err)
 		return nil, nil

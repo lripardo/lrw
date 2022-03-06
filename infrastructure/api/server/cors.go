@@ -6,10 +6,15 @@ import (
 	"time"
 )
 
+const (
+	DefaultAllowedHeaders = `["Origin", "Content-Length", "Content-Type", "X-Request-Width", "Accept", "Authorization"]`
+	DefaultAllowedMethods = `["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]`
+)
+
 var (
 	CorsAllowOrigins           = api.NewKey("CORS_ALLOW_ORIGINS", api.JSONStringArray, `[]`)
-	CorsAllowMethods           = api.NewKey("CORS_ALLOW_METHODS", api.JSONStringArray, `["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]`)
-	CorsAllowHeaders           = api.NewKey("CORS_ALLOW_HEADERS", api.JSONStringArray, `["Origin", "Content-Length", "Content-Type", "X-Request-Width", "Accept", "Authorization"]`)
+	CorsAllowMethods           = api.NewKey("CORS_ALLOW_METHODS", api.JSONStringArray, DefaultAllowedMethods)
+	CorsAllowHeaders           = api.NewKey("CORS_ALLOW_HEADERS", api.JSONStringArray, DefaultAllowedHeaders)
 	CorsExposeHeaders          = api.NewKey("CORS_EXPOSE_HEADERS", api.JSONStringArray, `[]`)
 	CorsMaxAge                 = api.NewKey("CORS_MAX_AGE", "gte=0,lte=24", "12")
 	CorsAllowAllOrigins        = api.NewKey("CORS_ALLOW_ALL_ORIGINS", api.Boolean, "true")
