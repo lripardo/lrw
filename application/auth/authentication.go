@@ -263,7 +263,7 @@ func (u *App) Routes() []api.Route {
 		Path:    "logout",
 		Methods: []string{http.MethodGet},
 		Handlers: []api.Handler{
-			u.authentication.Authenticate,
+			u.authentication.Authenticate(),
 			u.Logout,
 		},
 	})
@@ -272,7 +272,7 @@ func (u *App) Routes() []api.Route {
 		Path:    "",
 		Methods: []string{http.MethodGet},
 		Handlers: []api.Handler{
-			u.authentication.Authenticate,
+			u.authentication.Authenticate(),
 			u.Info,
 		},
 	})
