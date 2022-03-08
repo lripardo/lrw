@@ -5,16 +5,44 @@
 ## Sobre
 
 O objetivo deste projeto é manter uma base de código única. Quase todos os projetos modernos que possuem uma API,
-necessitam de alguns serviços em comum como o de autenticação, por exemplo.
+necessitam de alguns serviços em comum como o de autenticação, por exemplo. O projeto está baseado em alguns conceitos
+como DDD, 12 Factors e outros.
 
 ## Execução
 
-Este projeto utiliza [Docker Compose](https://docs.docker.com/compose/install). Após instalado, execute o seguinte
-comando:
+A execução pode ser realizada das seguintes formas:
+
+- Docker
+- Diretamente na máquina de desenvolvimento
+
+Eu recomendo rodar diretamente na máquina de desenvolvimento, pois o debugger fica muito mais fácil de se utilizar do
+que via Docker (debug via TCP). O servidor irá buscar as configurações diretamente das variáveis de ambiente com os
+valores exemplificados em [.env.example](.env.example). Todas as configurações padrões permitem que o servidor inicie
+com as funcionalidades internas (banco de dados, configurações, envio de e-mails, etc). Esses serviços podem ser
+alterados conforme a necessidade. Por exemplo, o banco de dados e o cache por padrão são implementados em memória, ou
+seja, nenhuma persistência em disco é utilizada. Para alterar este comportamento, basta alterar a variável de ambiente
+GORM_DRIVER_TYPE para mysql, informando assim, que o servidor utilize o MySQL como a unidade de persistência. Claro que
+após alterar este comportamento, outras variáveis também deverão ser declaradas por questões técnicas (Host, porta,
+usuário, senha, quantidade de conexões simultâneas, etc). O mesmo comportamento das configurações servem para os outros
+tipos de serviço:
+
+- E-mail (Print no console, AWS SES)
+- Cache (Redis, memória local)
+- Configurações (Variáveis de ambiente, memória local)
+- Validações de entrada de usuário (Hcaptcha, Recaptcha, Default)
+- Servidor (Gin Gonic)
+
+Para executar o projeto na máquina de desenvolvimento utilize as ferramentas padrões do go (build, run, test, etc), ou
+configure uma execução pela própria IDE (usuários da Goland approves ;D).
+
+Para executar o projeto com Docker, utilize o [Docker Compose](https://docs.docker.com/compose/install). Após instalado,
+execute o seguinte comando:
 
 ```
 docker-compose --env-file .env -f docker-compose.yaml up -d
 ```
+
+Onde .env é o arquivo que contém toda a sua configuração customizada dos serviços.
 
 O servidor irá iniciar por padrão em <http://localhost:8080>.
 
@@ -25,6 +53,9 @@ O servidor irá iniciar por padrão em <http://localhost:8080>.
 - Go
 - Go Modules
 - Redis
+- MySQL
+- HCaptcha
+- AWS
 - Outras dependências em [go.mod](go.mod)
 
 ## Ferramentas de auxílio no desenvolvimento
@@ -37,7 +68,7 @@ O servidor irá iniciar por padrão em <http://localhost:8080>.
 Para utilizar as ferramentas de auxílio:
 
 ```
-docker-compose -f docker-compose.tools.yaml up -d
+docker-compose -f docker-compose-tools.yaml up -d
 ```
 
 ## Boas práticas e observações
