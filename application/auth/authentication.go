@@ -270,7 +270,7 @@ func (u *App) Routes() []api.Route {
 
 	logout := authRoute.Append(api.Route{
 		Path:    "logout",
-		Methods: []string{http.MethodGet},
+		Methods: []string{http.MethodPost},
 		Handlers: []api.Handler{
 			u.authentication.Authenticate(),
 			u.Logout,

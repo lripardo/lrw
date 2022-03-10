@@ -82,6 +82,12 @@ docker-compose -f docker-compose-tools.yaml up -d
       esteja disponível a nível de conexão TCP
 - Testes dentro de diferentes pacotes com _test ao final
 
+## Produção
+
+Execute o script [build_docker_image.sh](build_docker_image.sh) para gerar uma imagem de produção docker. Sinta-se livre
+para renomear o nome da imagem. Alguns comandos de limpeza que também estão no script são opcionais. A idéia é que seja
+gerada a versão de build do executável e esteja dentro de uma imagem docker "from scratch".
+
 ## Referências
 
 - DDD: <https://ddd-crew.github.io>
