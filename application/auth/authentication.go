@@ -51,6 +51,11 @@ type SendVerifyData struct {
 	Token string `json:"token"`
 }
 
+type VerifyData struct {
+	JWT   string `json:"jwt" validate:"required,jwt"`
+	Token string `json:"token"`
+}
+
 type SendResetPasswordData struct {
 	Email string `validate:"required,email,max=255"`
 	Token string `json:"token"`
@@ -139,7 +144,11 @@ func (u *App) Info(ctx api.Context) *api.Response {
 }
 
 func (u *App) Verify(ctx api.Context) *api.Response {
-	claims, err := u.userVerify.Verify(ctx)
+	input := VerifyData{}
+	if response := u.inputValidator.Read(ctx, &input, u.validate); response != nil {
+		return response
+	}
+	claims, err := u.userVerify.Verify(input.JWT)
 	if err != nil {
 		return api.ResponseInternalError(err)
 	}
@@ -249,7 +258,7 @@ func (u *App) Routes() []api.Route {
 
 	verify := authRoute.Append(api.Route{
 		Path:     "verify",
-		Methods:  []string{http.MethodGet},
+		Methods:  []string{http.MethodPost},
 		Handlers: []api.Handler{u.Verify},
 	})
 

@@ -88,4 +88,6 @@ docker-compose -f docker-compose-tools.yaml up -d
 - REST: <https://martinfowler.com/articles/richardsonMaturityModel.html>
 - Padrões de projeto em Go: <https://refactoring.guru/pt-br/design-patterns/go>
 - Twelve-factor app: <https://12factor.net>
-- Headers de segurança: <https://docs.spring.io/spring-security/site/docs/5.0.x/reference/html/headers.html>
+- Headers de segurança:
+    - <https://docs.spring.io/spring-security/site/docs/5.0.x/reference/html/headers.html>
+    - <https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html#security-headers>
