@@ -70,6 +70,8 @@ func TestIsJSONStringArray(t *testing.T) {
 		`[""]`,
 		`["a", "", "c"]`,
 		"",
+		"null",
+		"undefined",
 	}
 	validateFields(t, validate, validatorJsonStringArray.Tag, valid, invalid)
 }
@@ -101,4 +103,28 @@ func TestIsPasswordDefault(t *testing.T) {
 		"1",
 	}
 	validateFields(t, validate, validatorPasswordDefault.Tag, valid, invalid)
+}
+
+func TestIsHeaderArray(t *testing.T) {
+	validatorHeaderArray := api.IsHeaderArray()
+	validate := api.NewValidator(validatorHeaderArray)
+	valid := []string{
+		`["TESTE: TESTE"]`,
+		`["T: TESTE"]`,
+		`["TESTE: T"]`,
+		`[]`,
+	}
+	invalid := []string{
+		"",
+		"1",
+		`[""]`,
+		`["TESTE"]`,
+		`["TESTE:TESTE"]`,
+		`["T:"]`,
+		`["T: T: T"]`,
+		`[":T"]`,
+		"null",
+		"undefined",
+	}
+	validateFields(t, validate, validatorHeaderArray.Tag, valid, invalid)
 }

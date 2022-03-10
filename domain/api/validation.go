@@ -44,6 +44,9 @@ func IsJSONStringArray() *Validator {
 			if err := json.Unmarshal([]byte(fieldLevel.Field().String()), &array); err != nil {
 				return false
 			}
+			if array == nil {
+				return false
+			}
 			for _, item := range array {
 				if item == "" {
 					return false
@@ -54,6 +57,20 @@ func IsJSONStringArray() *Validator {
 	}
 }
 
+func isHeaderArrayValidItem(item string) bool {
+	if item == "" {
+		return false
+	}
+	keyValue := strings.Split(item, ": ")
+	if len(keyValue) != 2 {
+		return false
+	}
+	if keyValue[0] == "" || keyValue[1] == "" {
+		return false
+	}
+	return true
+}
+
 func IsHeaderArray() *Validator {
 	return &Validator{
 		Tag: HeaderArray,
@@ -62,15 +79,11 @@ func IsHeaderArray() *Validator {
 			if err := json.Unmarshal([]byte(fieldLevel.Field().String()), &array); err != nil {
 				return false
 			}
+			if array == nil {
+				return false
+			}
 			for _, item := range array {
-				if item == "" {
-					return false
-				}
-				keyValue := strings.Split(item, ": ")
-				if len(keyValue) != 2 {
-					return false
-				}
-				if keyValue[0] == "" || keyValue[1] == "" {
+				if valid := isHeaderArrayValidItem(item); !valid {
 					return false
 				}
 			}

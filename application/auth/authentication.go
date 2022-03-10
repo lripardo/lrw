@@ -51,6 +51,11 @@ type SendVerifyData struct {
 	Token string `json:"token"`
 }
 
+type VerifyData struct {
+	JWT   string `json:"jwt" validate:"required,jwt"`
+	Token string `json:"token"`
+}
+
 type SendResetPasswordData struct {
 	Email string `validate:"required,email,max=255"`
 	Token string `json:"token"`
@@ -60,6 +65,12 @@ type ResetPasswordData struct {
 	JWT      string `json:"jwt" validate:"required,jwt"`
 	Password string `json:"password" validate:"password-default"`
 	Token    string `json:"token"`
+}
+
+type ChangePasswordData struct {
+	CurrentPassword string `json:"current_password" validate:"password-default"`
+	Password        string `json:"password" validate:"password-default"`
+	Token           string `json:"token"`
 }
 
 func (u *App) Register(ctx api.Context) *api.Response {
@@ -89,27 +100,35 @@ func (u *App) Register(ctx api.Context) *api.Response {
 	return api.ResponseOk()
 }
 
+func (u *App) internalLogin(email, password string) (*auth.User, *api.Response) {
+	user, err := u.userRepository.ReadUser(email, "email", "password", "verified_on")
+	if err != nil {
+		return nil, api.ResponseInternalError(err)
+	}
+	if user == nil {
+		if u.showUserNotFound {
+			return nil, api.ResponseNotFound()
+		}
+		api.D(UserNotFoundMessage)
+		return nil, api.ResponseUnauthorized()
+	}
+	if !user.IsPassword(password) {
+		return nil, api.ResponseUnauthorized()
+	}
+	if !u.allowLoginFromNotVerified && user.VerifiedOn == nil {
+		return nil, api.ResponseForbidden()
+	}
+	return user, nil
+}
+
 func (u *App) Login(ctx api.Context) *api.Response {
 	input := LoginUserData{}
 	if response := u.inputValidator.Read(ctx, &input, u.validate); response != nil {
 		return response
 	}
-	user, err := u.userRepository.ReadUser(input.Email, "email", "password", "verified_on")
-	if err != nil {
-		return api.ResponseInternalError(err)
-	}
-	if user == nil {
-		if u.showUserNotFound {
-			return api.ResponseNotFound()
-		}
-		api.D(UserNotFoundMessage)
-		return api.ResponseUnauthorized()
-	}
-	if !user.IsPassword(input.Password) {
-		return api.ResponseUnauthorized()
-	}
-	if !u.allowLoginFromNotVerified && user.VerifiedOn == nil {
-		return api.ResponseForbidden()
+	user, response := u.internalLogin(input.Email, input.Password)
+	if response != nil {
+		return response
 	}
 	authData, err := u.authentication.SignUser(ctx, user, input.Cookie)
 	if err != nil {
@@ -139,7 +158,11 @@ func (u *App) Info(ctx api.Context) *api.Response {
 }
 
 func (u *App) Verify(ctx api.Context) *api.Response {
-	claims, err := u.userVerify.Verify(ctx)
+	input := VerifyData{}
+	if response := u.inputValidator.Read(ctx, &input, u.validate); response != nil {
+		return response
+	}
+	claims, err := u.userVerify.Verify(input.JWT)
 	if err != nil {
 		return api.ResponseInternalError(err)
 	}
@@ -172,6 +195,19 @@ func (u *App) SendVerify(ctx api.Context) *api.Response {
 	return api.ResponseOk()
 }
 
+func (u *App) internalChangePassword(user *auth.User, password string) *api.Response {
+	if err := u.authentication.DeleteUserContext(user.Email); err != nil {
+		return api.ResponseInternalError(err)
+	}
+	if err := user.HashPassword(password, u.passwordCost); err != nil {
+		return api.ResponseInternalError(err)
+	}
+	if err := u.userRepository.UpdatePassword(user); err != nil {
+		return api.ResponseInternalError(err)
+	}
+	return nil
+}
+
 func (u *App) ResetPassword(ctx api.Context) *api.Response {
 	input := ResetPasswordData{}
 	if response := u.inputValidator.Read(ctx, &input, u.validate); response != nil {
@@ -193,14 +229,11 @@ func (u *App) ResetPassword(ctx api.Context) *api.Response {
 		api.D("password changed recently, wait until the token reset password life expires plus 1 minute")
 		return api.ResponseForbidden()
 	}
-	if err := user.HashPassword(input.Password, u.passwordCost); err != nil {
+	if err := u.userRepository.MakeVerified(user.Email); err != nil {
 		return api.ResponseInternalError(err)
 	}
-	if err := u.userRepository.UpdatePassword(user); err != nil {
-		return api.ResponseInternalError(err)
-	}
-	if err := u.authentication.DeleteUserContext(user.Email); err != nil {
-		return api.ResponseInternalError(err)
+	if response := u.internalChangePassword(user, input.Password); response != nil {
+		return response
 	}
 	return api.ResponseOk()
 }
@@ -225,6 +258,22 @@ func (u *App) SendResetPassword(ctx api.Context) *api.Response {
 	return api.ResponseOk()
 }
 
+func (u *App) ChangePassword(ctx api.Context) *api.Response {
+	input := ChangePasswordData{}
+	if response := u.inputValidator.Read(ctx, &input, u.validate); response != nil {
+		return response
+	}
+	userContext := auth.GetUserContext(ctx)
+	user, response := u.internalLogin(userContext.Email, input.CurrentPassword)
+	if response != nil {
+		return response
+	}
+	if response := u.internalChangePassword(user, input.Password); response != nil {
+		return response
+	}
+	return api.ResponseOk()
+}
+
 func (u *App) Routes() []api.Route {
 	root := api.NewRootRoute("api/v1")
 
@@ -246,7 +295,7 @@ func (u *App) Routes() []api.Route {
 
 	verify := authRoute.Append(api.Route{
 		Path:     "verify",
-		Methods:  []string{http.MethodGet},
+		Methods:  []string{http.MethodPost},
 		Handlers: []api.Handler{u.Verify},
 	})
 
@@ -254,24 +303,6 @@ func (u *App) Routes() []api.Route {
 		Path:     "send-verify",
 		Methods:  []string{http.MethodPost},
 		Handlers: []api.Handler{u.SendVerify},
-	})
-
-	logout := authRoute.Append(api.Route{
-		Path:    "logout",
-		Methods: []string{http.MethodGet},
-		Handlers: []api.Handler{
-			u.authentication.Authenticate,
-			u.Logout,
-		},
-	})
-
-	info := authRoute.Append(api.Route{
-		Path:    "",
-		Methods: []string{http.MethodGet},
-		Handlers: []api.Handler{
-			u.authentication.Authenticate,
-			u.Info,
-		},
 	})
 
 	sendResetPassword := authRoute.Append(api.Route{
@@ -286,7 +317,45 @@ func (u *App) Routes() []api.Route {
 		Handlers: []api.Handler{u.ResetPassword},
 	})
 
-	return []api.Route{register, login, info, verify, sendVerify, logout, sendResetPassword, resetPassword}
+	// authenticated handlers
+	logout := authRoute.Append(api.Route{
+		Path:    "logout",
+		Methods: []string{http.MethodPost},
+		Handlers: []api.Handler{
+			u.authentication.Authenticate(),
+			u.Logout,
+		},
+	})
+
+	info := authRoute.Append(api.Route{
+		Path:    "",
+		Methods: []string{http.MethodGet},
+		Handlers: []api.Handler{
+			u.authentication.Authenticate(),
+			u.Info,
+		},
+	})
+
+	changePassword := authRoute.Append(api.Route{
+		Path:    "change-password",
+		Methods: []string{http.MethodPost},
+		Handlers: []api.Handler{
+			u.authentication.Authenticate(),
+			u.ChangePassword,
+		},
+	})
+
+	return []api.Route{
+		register,
+		login,
+		info,
+		verify,
+		sendVerify,
+		logout,
+		sendResetPassword,
+		resetPassword,
+		changePassword,
+	}
 }
 
 func NewApp(configuration api.Configuration,

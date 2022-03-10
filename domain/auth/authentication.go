@@ -99,24 +99,39 @@ func (a *Authentication) userFromRepository(claims *jwt.StandardClaims) (*UserCo
 	return user, nil
 }
 
-func (a *Authentication) Authenticate(context api.Context) *api.Response {
-	tokenString := a.tokenStringFromCookieOrCustomHeader(context)
-	claims, err := Claims(tokenString, a.jwtKey)
-	if err != nil {
-		return api.ResponseInternalError(err)
+func containsRole(roles []string, role string) bool {
+	for _, r := range roles {
+		if r == role {
+			return true
+		}
 	}
-	if claims == nil {
-		return api.ResponseUnauthorized()
+	return false
+}
+
+func (a *Authentication) Authenticate(roles ...string) api.Handler {
+	return func(context api.Context) *api.Response {
+		tokenString := a.tokenStringFromCookieOrCustomHeader(context)
+		claims, err := Claims(tokenString, a.jwtKey)
+		if err != nil {
+			return api.ResponseInternalError(err)
+		}
+		if claims == nil {
+			return api.ResponseUnauthorized()
+		}
+		user, err := a.userFromRepository(claims)
+		if err != nil {
+			return api.ResponseInternalError(err)
+		}
+		if user == nil {
+			return api.ResponseUnauthorized()
+		}
+		if len(roles) > 0 && !containsRole(roles, user.Role) {
+			api.D("invalid role for this route")
+			return api.ResponseForbidden()
+		}
+		SetUserContext(context, *user)
+		return nil
 	}
-	user, err := a.userFromRepository(claims)
-	if err != nil {
-		return api.ResponseInternalError(err)
-	}
-	if user == nil {
-		return api.ResponseUnauthorized()
-	}
-	SetUserContext(context, *user)
-	return nil
 }
 
 func NewAuthenticationService(configuration api.Configuration, repository UserContextRepository) *Authentication {

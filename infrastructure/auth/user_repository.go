@@ -128,16 +128,16 @@ func (s *UserRepository) ReadUser(email string, fields ...string) (*auth.User, e
 	return &user, nil
 }
 
-func NewUserRepository(configuration api.Configuration, db *gorm.DB) (*UserRepository, error) {
-	if migrate := configuration.Bool(connection.GormMigrate); migrate {
+func NewUserRepository(configuration api.Configuration, db *connection.GormDB) (*UserRepository, error) {
+	if db.Migrate {
 		api.W("migration table is enabled, migrating on every startup can compromise the performance")
-		if err := db.AutoMigrate(&UserDTO{}); err != nil {
+		if err := db.DB.AutoMigrate(&UserDTO{}); err != nil {
 			return nil, err
 		}
 	}
 	c := cache.NewCache(configuration, UserContextDB)
 	return &UserRepository{
-		db:    db,
+		db:    db.DB,
 		cache: c,
 	}, nil
 }

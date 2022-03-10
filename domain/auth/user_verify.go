@@ -30,12 +30,7 @@ type UserVerify struct {
 	from     string
 }
 
-func (u *UserVerify) Verify(ctx api.Context) (*jwt.StandardClaims, error) {
-	token := ctx.Query(VerifyParam)
-	if token == "" {
-		api.D("empty token verify")
-		return nil, nil
-	}
+func (u *UserVerify) Verify(token string) (*jwt.StandardClaims, error) {
 	claims, err := Claims(token, u.key)
 	if err != nil {
 		return nil, err
