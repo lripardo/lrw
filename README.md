@@ -15,34 +15,39 @@ A execução pode ser realizada das seguintes formas:
 - Docker
 - Diretamente na máquina de desenvolvimento
 
-Eu recomendo rodar diretamente na máquina de desenvolvimento, pois o debugger fica muito mais fácil de se utilizar do
-que via Docker (debug via TCP). O servidor irá buscar as configurações diretamente das variáveis de ambiente com os
-valores exemplificados em [.env.example](.env.example). Todas as configurações padrões permitem que o servidor inicie
-com as funcionalidades internas (banco de dados, configurações, envio de e-mails, etc). Esses serviços podem ser
-alterados conforme a necessidade. Por exemplo, o banco de dados e o cache por padrão são implementados em memória, ou
-seja, nenhuma persistência em disco é utilizada. Para alterar este comportamento, basta alterar a variável de ambiente
-GORM_DRIVER_TYPE para mysql, informando assim, que o servidor utilize o MySQL como a unidade de persistência. Claro que
-após alterar este comportamento, outras variáveis também deverão ser declaradas por questões técnicas (Host, porta,
-usuário, senha, quantidade de conexões simultâneas, etc). O mesmo comportamento das configurações servem para os outros
-tipos de serviço:
+Quem irá trabalhar em features do backend, executar o projeto diretamente na máquina de desenvolvimento é a melhor
+opção, pois o debugger fica muito mais fácil de se utilizar. Caso seja um desenvolvedor frontend e deseja apenas
+consumir a API a execução via Docker é a melhor opção. As configurações serão buscadas diretamente das variáveis de
+ambiente com os valores exemplificados em [.env.example](.env.example). As configurações padrões permitem que os
+serviços iniciem com as funcionalidades internas em memória (banco de dados, cache, envio de e-mails, etc). Esses
+serviços podem ser alterados conforme a necessidade. Por exemplo, para alterar o serviço de banco de dados para MySQL,
+basta alterar a variável de ambiente GORM_DRIVER_TYPE para mysql. Claro que após alterar este comportamento, outras
+variáveis também deverão ser declaradas por questões técnicas (host, porta, usuário, senha, quantidade de conexões
+simultâneas, etc). Outros tipos de serviço:
 
 - E-mail (Print no console, AWS SES)
 - Cache (Redis, memória local)
 - Configurações (Variáveis de ambiente, memória local)
-- Validações de entrada de usuário (Hcaptcha, Recaptcha, Default)
-- Servidor (Gin Gonic)
+- Validações de entrada de usuário (Hcaptcha, Default)
+- API (Gin Gonic)
 
-Para executar o projeto na máquina de desenvolvimento utilize as ferramentas padrões do go (build, run, test, etc), ou
-configure uma execução pela própria IDE (usuários da Goland approves ;D).
+Copie o arquivo [.env.example](.env.example) para .env e deixe somente as configurações adequadas ao seu ambiente.
+
+```
+cp .env.example .env
+vi .env
+```
+
+Para executar o projeto na máquina de desenvolvimento utilize as ferramentas padrões do go (build, run, test, etc) ou
+configure uma execução pela própria IDE. Algumas IDE's como a Goland © necessitam do plugin .env para carregar variáveis
+de ambiente diretamente de arquivos.
 
 Para executar o projeto com Docker, utilize o [Docker Compose](https://docs.docker.com/compose/install). Após instalado,
 execute o seguinte comando:
 
 ```
-docker-compose --env-file .env -f docker-compose.yaml up -d
+docker-compose up -d
 ```
-
-Onde .env é o arquivo que contém toda a sua configuração customizada dos serviços.
 
 O servidor irá iniciar por padrão em <http://localhost:8080>.
 
@@ -59,6 +64,9 @@ O servidor irá iniciar por padrão em <http://localhost:8080>.
 - Outras dependências em [go.mod](go.mod)
 
 ## Ferramentas de auxílio no desenvolvimento
+
+As ferramentas de auxílio trazem de forma rápida as implementações de banco de dados (MySQL) e cache (Redis) via docker.
+Também são configuradas softwares web de consulta de dados. Que são:
 
 - PhpMyAdmin: Esta ferramenta é útil durante a fase de desenvolvimento. Com poucas linhas, todo o ambiente sobe como um
   container utilizando as credenciais das variáveis de ambiente. Disponível por padrão em: <http://localhost:8081>
