@@ -57,21 +57,21 @@ func IsJSONStringArray() *Validator {
 	}
 }
 
-func IsHeaderArray() *Validator {
-	isValidItem := func(item string) bool {
-		if item == "" {
-			return false
-		}
-		keyValue := strings.Split(item, ": ")
-		if len(keyValue) != 2 {
-			return false
-		}
-		if keyValue[0] == "" || keyValue[1] == "" {
-			return false
-		}
-		return true
+func isHeaderArrayValidItem(item string) bool {
+	if item == "" {
+		return false
 	}
+	keyValue := strings.Split(item, ": ")
+	if len(keyValue) != 2 {
+		return false
+	}
+	if keyValue[0] == "" || keyValue[1] == "" {
+		return false
+	}
+	return true
+}
 
+func IsHeaderArray() *Validator {
 	return &Validator{
 		Tag: HeaderArray,
 		ValidatorFunc: func(fieldLevel validator.FieldLevel) bool {
@@ -83,7 +83,7 @@ func IsHeaderArray() *Validator {
 				return false
 			}
 			for _, item := range array {
-				if valid := isValidItem(item); !valid {
+				if valid := isHeaderArrayValidItem(item); !valid {
 					return false
 				}
 			}
