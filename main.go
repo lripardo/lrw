@@ -28,8 +28,16 @@ func main() {
 		api.Fatal(err)
 	}
 
+	//Migrate tables
+	if err := gormDB.AutoMigrate(
+		&infraAuth.UserDTO{},
+		//List of table models
+	); err != nil {
+		api.Fatal(err)
+	}
+
 	//repository instances
-	userRepository, err := infraAuth.NewUserRepository(environmentConfiguration, gormDB)
+	userRepository, err := infraAuth.NewUserRepository(environmentConfiguration, gormDB.DB)
 	if err != nil {
 		api.Fatal(err)
 	}

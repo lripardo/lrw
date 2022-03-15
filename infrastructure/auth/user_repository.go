@@ -5,7 +5,6 @@ import (
 	"github.com/lripardo/lrw/domain/api"
 	"github.com/lripardo/lrw/domain/auth"
 	"github.com/lripardo/lrw/infrastructure/api/cache"
-	"github.com/lripardo/lrw/infrastructure/api/connection"
 	"gorm.io/gorm"
 	"time"
 )
@@ -128,16 +127,10 @@ func (s *UserRepository) ReadUser(email string, fields ...string) (*auth.User, e
 	return &user, nil
 }
 
-func NewUserRepository(configuration api.Configuration, db *connection.GormDB) (*UserRepository, error) {
-	if db.Migrate {
-		api.W("migration table is enabled, migrating on every startup can compromise the performance")
-		if err := db.DB.AutoMigrate(&UserDTO{}); err != nil {
-			return nil, err
-		}
-	}
+func NewUserRepository(configuration api.Configuration, db *gorm.DB) (*UserRepository, error) {
 	c := cache.NewCache(configuration, UserContextDB)
 	return &UserRepository{
-		db:    db.DB,
+		db:    db,
 		cache: c,
 	}, nil
 }

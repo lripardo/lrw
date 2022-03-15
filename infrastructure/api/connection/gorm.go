@@ -39,6 +39,16 @@ type GormDB struct {
 	Migrate bool
 }
 
+func (g *GormDB) AutoMigrate(models ...interface{}) error {
+	if g.Migrate {
+		api.W("auto migrate tables is enabled, migrating on every startup can compromise the performance")
+		if err := g.DB.AutoMigrate(models...); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func newGormConfig(configuration api.Configuration) *gorm.Config {
 	discard := configuration.Bool(GormLoggerDiscard)
 	loggerMode := configuration.Int(GormLoggerMode)
