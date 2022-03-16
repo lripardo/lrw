@@ -10,13 +10,15 @@ import (
 var (
 	GinTrustedProxies = api.NewKey("GIN_TRUSTED_PROXIES", api.JSONStringArray, `["127.0.0.1"]`)
 	GinEnableLog      = api.NewKey("GIN_ENABLE_LOG", api.Boolean, "true")
+	GinAlwaysOk       = api.NewKey("GIN_ALWAYS_OK", api.Boolean, "true")
 )
 
 type Gin struct {
-	engine *gin.Engine
+	alwaysOk bool
+	engine   *gin.Engine
 }
 
-func doResponse(ginContext *gin.Context, response *api.Response) {
+func (g *Gin) doResponse(ginContext *gin.Context, response *api.Response) {
 	if response.Redirect != "" {
 		ginContext.Redirect(response.Status, response.Redirect)
 		ginContext.Abort()
@@ -34,16 +36,21 @@ func doResponse(ginContext *gin.Context, response *api.Response) {
 		response.Message = http.StatusText(response.Status)
 	}
 
-	ginContext.AbortWithStatusJSON(response.Status, response)
+	status := response.Status
+	if g.alwaysOk {
+		status = http.StatusOK
+	}
+
+	ginContext.AbortWithStatusJSON(status, response)
 }
 
-func ginHandlersWrap(handlers ...api.Handler) func(*gin.Context) {
+func (g *Gin) ginHandlersWrap(handlers ...api.Handler) func(*gin.Context) {
 	return func(ginContext *gin.Context) {
 		for _, h := range handlers {
 			response := h(ginContext)
 
 			if response != nil {
-				doResponse(ginContext, response)
+				g.doResponse(ginContext, response)
 				return
 			}
 		}
@@ -58,12 +65,12 @@ func (g *Gin) Start() {
 
 func (g *Gin) route(route api.Route) {
 	for _, m := range route.Methods {
-		g.engine.Handle(m, route.Path, ginHandlersWrap(route.Handlers...))
+		g.engine.Handle(m, route.Path, g.ginHandlersWrap(route.Handlers...))
 	}
 }
 
 func (g *Gin) filter(filter api.Route) {
-	g.engine.Use(ginHandlersWrap(filter.Handlers...))
+	g.engine.Use(g.ginHandlersWrap(filter.Handlers...))
 }
 
 func (g *Gin) RegisterMiddlewares(middlewares ...api.App) {
@@ -92,7 +99,11 @@ func NewGinServer(configuration api.Configuration) api.Server {
 	if ginEnableLog := configuration.Bool(GinEnableLog); ginEnableLog {
 		engine.Use(gin.Logger())
 	}
+	alwaysOk := configuration.Bool(GinAlwaysOk)
 	engine.Use(gin.Recovery(), cors.New(corsConfig))
 	api.D("getting gin server implementation")
-	return &Gin{engine: engine}
+	return &Gin{
+		engine:   engine,
+		alwaysOk: alwaysOk,
+	}
 }
