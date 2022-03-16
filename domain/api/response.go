@@ -8,6 +8,10 @@ func ResponseOk() *Response {
 	return &Response{Status: http.StatusOK}
 }
 
+func ResponseUnauthorizedWithCode(code string) *Response {
+	return &Response{Status: http.StatusUnauthorized, Code: code}
+}
+
 func ResponseUnauthorized() *Response {
 	return &Response{Status: http.StatusUnauthorized}
 }

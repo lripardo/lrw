@@ -12,13 +12,15 @@ import (
 )
 
 const (
-	HCaptchaAPI           = "https://hcaptcha.com/siteverify"
-	HCaptchaDummyHostname = "dummy-key-pass"
+	HCaptchaAPI            = "https://hcaptcha.com/siteverify"
+	HCaptchaDummyHostname  = "dummy-key-pass"
+	InvalidCaptchaSolution = "invalid-captcha-solution"
 )
 
 var (
-	HCaptchaSecretKey = api.NewKey("H_CAPTCHA_SECRET_KEY", "required", "0x0000000000000000000000000000000000000000")
-	HCaptchaSiteKey   = api.NewKey("H_CAPTCHA_SITE_KEY", "required", "10000000-ffff-ffff-ffff-000000000001")
+	HCaptchaSecretKey    = api.NewKey("H_CAPTCHA_SECRET_KEY", "required", "0x0000000000000000000000000000000000000000")
+	HCaptchaSiteKey      = api.NewKey("H_CAPTCHA_SITE_KEY", "required", "10000000-ffff-ffff-ffff-000000000001")
+	HCaptchaAllowedHosts = api.NewKey("H_CAPTCHA_ALLOWED_HOSTS", api.JSONStringArray, `["localhost"]`)
 )
 
 type HCaptchaResponse struct {
@@ -30,17 +32,27 @@ type HCaptchaResponse struct {
 }
 
 type HCaptcha struct {
-	HCaptchaSecretKey string
-	HCaptchaSiteKey   string
-	Validator         api.InputValidator
-	Client            *resty.Client
+	SecretKey    string
+	SiteKey      string
+	AllowedHosts []string
+	Validator    api.InputValidator
+	Client       *resty.Client
+}
+
+func (d *HCaptcha) AllowHost(host string) bool {
+	for _, h := range d.AllowedHosts {
+		if h == host {
+			return true
+		}
+	}
+	return false
 }
 
 func (d *HCaptcha) validate(token string) *api.Response {
 	resp, err := d.Client.R().SetFormData(map[string]string{
 		"response": token,
-		"secret":   d.HCaptchaSecretKey,
-		"sitekey":  d.HCaptchaSiteKey,
+		"secret":   d.SecretKey,
+		"sitekey":  d.SiteKey,
 	}).Post(HCaptchaAPI)
 	if err != nil {
 		return api.ResponseInternalError(err)
@@ -55,6 +67,10 @@ func (d *HCaptcha) validate(token string) *api.Response {
 	}
 	if !hCaptchaResponse.Success {
 		api.D("unsuccessful token validation", hCaptchaResponse)
+		return api.ResponseUnauthorizedWithCode(InvalidCaptchaSolution)
+	}
+	if !d.AllowHost(hCaptchaResponse.Hostname) {
+		api.D("the hostname was not on permission list", hCaptchaResponse.Hostname)
 		return api.ResponseUnauthorized()
 	}
 	if hCaptchaResponse.Hostname == HCaptchaDummyHostname {
@@ -93,11 +109,13 @@ func NewHCaptchaInputValidator(v api.InputValidator, configuration api.Configura
 	api.D("getting h captcha input validation implementation")
 	hCaptchaSecretKey := configuration.String(HCaptchaSecretKey)
 	hCaptchaSiteKey := configuration.String(HCaptchaSiteKey)
+	allowedHosts := configuration.Strings(HCaptchaAllowedHosts)
 	restyClient := resty.New()
 	return &HCaptcha{
-		HCaptchaSiteKey:   hCaptchaSiteKey,
-		HCaptchaSecretKey: hCaptchaSecretKey,
-		Client:            restyClient,
-		Validator:         v,
+		AllowedHosts: allowedHosts,
+		SiteKey:      hCaptchaSiteKey,
+		SecretKey:    hCaptchaSecretKey,
+		Client:       restyClient,
+		Validator:    v,
 	}
 }

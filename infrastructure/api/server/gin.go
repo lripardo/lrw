@@ -10,7 +10,7 @@ import (
 var (
 	GinTrustedProxies = api.NewKey("GIN_TRUSTED_PROXIES", api.JSONStringArray, `["127.0.0.1"]`)
 	GinEnableLog      = api.NewKey("GIN_ENABLE_LOG", api.Boolean, "true")
-	GinAlwaysOk       = api.NewKey("GIN_ALWAYS_OK", api.Boolean, "true")
+	GinAlwaysOk       = api.NewKey("GIN_ALWAYS_OK", api.Boolean, "false")
 )
 
 type Gin struct {
