@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	HCaptchaAPI            = "https://hcaptcha.com/siteverify"
-	HCaptchaDummyHostname  = "dummy-key-pass"
-	InvalidCaptchaSolution = "invalid-captcha-solution"
+	HCaptchaAPI           = "https://hcaptcha.com/siteverify"
+	HCaptchaDummyHostname = "dummy-key-pass"
 )
 
 var (
@@ -67,7 +66,7 @@ func (d *HCaptcha) validate(token string) *api.Response {
 	}
 	if !hCaptchaResponse.Success {
 		api.D("unsuccessful token validation", hCaptchaResponse)
-		return api.ResponseUnauthorizedWithCode(InvalidCaptchaSolution)
+		return api.ResponseUnauthorized()
 	}
 	if !d.AllowHost(hCaptchaResponse.Hostname) {
 		api.D("the hostname was not on permission list", hCaptchaResponse.Hostname)
