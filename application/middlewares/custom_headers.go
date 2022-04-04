@@ -5,7 +5,7 @@ const DefaultCustomHeaders = `[
 	"X-Content-Type-Options: nosniff",
 	"X-Frame-Options: DENY",
 	"Referrer-Policy: no-referrer",
-	"X-XSS-Protection: 1; mode=block",
+	"X-XSS-Protection: 1; mode=block"
 ]`
 
 /*
